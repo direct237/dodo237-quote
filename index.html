@@ -759,13 +759,7 @@ function doParse() {
   const dbEl = document.getElementById('debugBox');
   if(dbEl) { dbEl.textContent = ''; dbEl.style.display = 'block'; }
 
-  // 소스 자동 감지 — 아이코원 고유 패턴 감지 시에만 전환, 아니면 현재 선택 유지 (기본 인스나라)
-  if(!srcManual){
-    const isIcowon = raw.includes('특별약관\t') || raw.includes('부속가액 :') ||
-                     raw.includes('기타특약 :') || raw.includes('납입방법 :');
-    if(isIcowon) source='icowon';
-    else source='insnara';
-  }
+  // 소스는 사용자 선택 유지 (자동 감지 없음 — 기본값 인스나라)
   srcManual=false;
   document.getElementById('src-ico').className='srcbtn'+(source==='icowon'?' on':'');
   document.getElementById('src-ins').className='srcbtn'+(source==='insnara'?' on':'');
