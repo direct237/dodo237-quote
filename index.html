@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>도도237 비교견적 변환 v5</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -265,9 +269,49 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 
 /* 아이콘 셀 v5 */
 .cov-icon-cell .ci-icon-svg{font-size:14px;margin-bottom:2px}
+
+/* ═══ 로그인 화면 ═══ */
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0c2248 0%,#1a3a6b 55%,#2563eb 100%);z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border-radius:16px;padding:40px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);max-width:380px;width:90%}
+.login-box h2{font-size:22px;font-weight:700;color:#1a3a6b;margin-bottom:6px}
+.login-box p{font-size:13px;color:#64748b;margin-bottom:24px}
+.login-box .logo-txt-big{font-size:12px;color:#94a3b8;margin-bottom:16px;letter-spacing:1px}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 20px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-size:14px;font-weight:600;color:#1e293b;cursor:pointer;transition:.15s;font-family:inherit}
+.google-btn:hover{background:#f8fafc;border-color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.google-btn img{width:20px;height:20px}
+
+/* 사용자 정보 (topbar) */
+.user-info{display:flex;align-items:center;gap:8px;margin-left:auto}
+.user-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.3)}
+.user-name{font-size:11px;color:rgba(255,255,255,.85);font-weight:600}
+.logout-btn{padding:3px 8px;border-radius:6px;font-size:10px;cursor:pointer;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);font-family:inherit}
+.logout-btn:hover{background:rgba(255,255,255,.2)}
+
+/* 견적 리스트 패널 */
+.quote-list-panel{background:var(--card);border-radius:var(--radius);border:.5px solid var(--border);padding:14px;margin-bottom:10px}
+.ql-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:.5px solid var(--border);border-radius:7px;margin-bottom:4px;cursor:pointer;transition:.15s}
+.ql-row:hover{background:#f0f9ff;border-color:#bfdbfe}
+.ql-name{font-size:13px;font-weight:600;flex:1}
+.ql-meta{font-size:10px;color:var(--text3)}
+.ql-user{font-size:10px;color:var(--text2);background:#f1f5f9;padding:1px 6px;border-radius:4px}
+.ql-del{width:20px;height:20px;border:none;background:none;color:var(--red);cursor:pointer;font-size:13px;opacity:.5}
+.ql-del:hover{opacity:1}
 </style>
 </head>
 <body>
+
+<!-- 로그인 오버레이 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="logo-txt-big">DODO237</div>
+    <h2>도도237 비교견적</h2>
+    <p>다이렉트 자동차보험 비교견적 시스템</p>
+    <button class="google-btn" onclick="googleLogin()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+      Google 계정으로 로그인
+    </button>
+  </div>
+</div>
 
 <!-- TOP BAR -->
 <div class="topbar">
@@ -276,11 +320,27 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <button class="srcbtn on" id="src-ico" onclick="setSrc('icowon')">아이코원</button>
   <button class="srcbtn" id="src-ins" onclick="setSrc('insnara')">인스나라</button>
   <span id="src-hint" style="font-size:10px;color:rgba(255,255,255,.55);font-weight:400;margin-left:6px">아이코원 견적화면 Ctrl+A → Ctrl+C</span>
+  <div class="user-info" id="userInfo" style="display:none">
+    <img class="user-avatar" id="userAvatar" src="" alt="">
+    <span class="user-name" id="userName"></span>
+    <button class="logout-btn" onclick="googleLogout()">로그아웃</button>
+  </div>
 </div>
 
 <div class="wrap">
 <!-- ═══ LEFT ═══ -->
 <div class="lcol">
+
+  <!-- 0. 저장된 견적 리스트 -->
+  <div class="quote-list-panel" id="quoteListPanel">
+    <div class="ph"><span class="ico">📂</span>저장된 견적 리스트
+      <span id="quoteCount" style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px"></span>
+      <button class="btn sm" style="margin-left:auto" onclick="loadQuoteList()">🔄 새로고침</button>
+    </div>
+    <div id="quoteList" style="max-height:200px;overflow-y:auto">
+      <div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">로그인 후 저장된 견적이 표시됩니다</div>
+    </div>
+  </div>
 
   <!-- 1. 붙여넣기 -->
   <div class="panel">
@@ -295,6 +355,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
       <button class="btn" onclick="doReset()">🗑 초기화</button>
       <span id="pstatus" style="font-size:11px;color:var(--green);font-weight:600"></span>
       <button class="btn xs" id="saveNotionBtn" onclick="saveToNotion()" style="display:none;margin-left:4px">📝 노션 저장</button>
+      <button class="btn grn sm" id="saveFirebaseBtn" onclick="saveQuote()" style="display:none">💾 견적 저장</button>
       <span id="saveStatus" style="font-size:11px;color:var(--text3)"></span>
       <!-- 디버그 토글 -->
       <button class="btn xs" onclick="toggleDebug()" style="margin-left:auto;opacity:.5">디버그</button>
@@ -1875,6 +1936,195 @@ function toggleDebug(){const el=document.getElementById('debugBox');el.style.dis
 
 // 초기 빈 카드
 renderCard();
+
+// ═══════════════════════════════════════════════════════════════
+// Firebase 인증 & Firestore
+// ═══════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAA3b_ZCO59dEROarI4qz_VQNV4DlbfS9M",
+  authDomain: "dodo237-b9564.firebaseapp.com",
+  projectId: "dodo237-b9564",
+  storageBucket: "dodo237-b9564.firebasestorage.app",
+  messagingSenderId: "518927014334",
+  appId: "1:518927014334:web:b5b70050d10ab4c36441ef"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null;
+
+// 구글 로그인
+function googleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(e => {
+    toast('⚠️ 로그인 실패: ' + e.message);
+  });
+}
+
+// 로그아웃
+function googleLogout() {
+  if(!confirm('로그아웃 하시겠습니까?')) return;
+  auth.signOut();
+}
+
+// 인증 상태 감지
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  const overlay = document.getElementById('loginOverlay');
+  const userInfo = document.getElementById('userInfo');
+  if(user) {
+    overlay.style.display = 'none';
+    userInfo.style.display = 'flex';
+    document.getElementById('userAvatar').src = user.photoURL || '';
+    document.getElementById('userName').textContent = user.displayName || user.email;
+    loadQuoteList();
+  } else {
+    overlay.style.display = 'flex';
+    userInfo.style.display = 'none';
+  }
+});
+
+// ═══ 견적 저장 ═══
+function saveQuote() {
+  if(!currentUser) { toast('⚠️ 로그인이 필요합니다'); return; }
+  const v = vehicles[vIdx];
+  if(!v) { toast('⚠️ 저장할 견적 데이터가 없습니다'); return; }
+
+  const data = {
+    userId: currentUser.uid,
+    userName: currentUser.displayName || currentUser.email,
+    userEmail: currentUser.email,
+    info: v.info || {},
+    coverages: v.coverages || [],
+    rankData: v.rankData || [],
+    vehicles: vehicles.map(vh => ({
+      id: vh.id,
+      info: vh.info || {},
+      coverages: vh.coverages || [],
+      rankData: vh.rankData || []
+    })),
+    activeCov: activeCov,
+    memo: document.getElementById('memoTxt').value || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    customerName: v.info?.name || '미입력',
+    carNo: v.info?.carno || '',
+    carName: v.info?.carname || ''
+  };
+
+  const btn = document.getElementById('saveFirebaseBtn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+
+  db.collection('quotes').add(data).then(doc => {
+    toast('✅ 견적이 저장되었습니다');
+    btn.disabled = false;
+    btn.textContent = '💾 견적 저장';
+    loadQuoteList();
+  }).catch(e => {
+    toast('⚠️ 저장 실패: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '💾 견적 저장';
+  });
+}
+
+// ═══ 견적 리스트 불러오기 ═══
+function loadQuoteList() {
+  if(!currentUser) return;
+  const listEl = document.getElementById('quoteList');
+  const countEl = document.getElementById('quoteCount');
+  listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:10px">불러오는 중...</div>';
+
+  db.collection('quotes')
+    .orderBy('createdAt', 'desc')
+    .limit(50)
+    .get()
+    .then(snap => {
+      if(snap.empty) {
+        listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">저장된 견적이 없습니다</div>';
+        countEl.textContent = '(0건)';
+        return;
+      }
+      countEl.textContent = `(${snap.size}건)`;
+      listEl.innerHTML = snap.docs.map(doc => {
+        const d = doc.data();
+        const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+        const name = d.customerName || '미입력';
+        const car = d.carName ? d.carName.slice(0, 12) : '';
+        const carNo = d.carNo || '';
+        const user = d.userName || d.userEmail || '';
+        const isOwner = d.userId === currentUser.uid;
+        return `<div class="ql-row" onclick="loadQuote('${doc.id}')">
+          <div class="ql-name">${name} ${carNo ? '('+carNo+')' : ''}</div>
+          <div class="ql-meta">${car}</div>
+          <div class="ql-meta">${date}</div>
+          <div class="ql-user">${user}</div>
+          ${isOwner ? `<button class="ql-del" onclick="event.stopPropagation();deleteQuote('${doc.id}')" title="삭제">✕</button>` : ''}
+        </div>`;
+      }).join('');
+    })
+    .catch(e => {
+      listEl.innerHTML = '<div style="text-align:center;color:var(--red);font-size:12px;padding:10px">⚠️ 불러오기 실패</div>';
+      console.error(e);
+    });
+}
+
+// ═══ 견적 불러오기 ═══
+function loadQuote(docId) {
+  db.collection('quotes').doc(docId).get().then(doc => {
+    if(!doc.exists) { toast('⚠️ 견적을 찾을 수 없습니다'); return; }
+    const d = doc.data();
+
+    // 차량 데이터 복원
+    if(d.vehicles && d.vehicles.length) {
+      vehicles = d.vehicles.map(v => ({
+        id: v.id || Date.now(),
+        info: v.info || {},
+        coverages: v.coverages || [],
+        rankData: v.rankData || []
+      }));
+    } else {
+      vehicles = [{
+        id: Date.now(),
+        info: d.info || {},
+        coverages: d.coverages || [],
+        rankData: d.rankData || []
+      }];
+    }
+    vIdx = 0;
+
+    // 담보 복원
+    if(d.activeCov) activeCov = d.activeCov;
+
+    // 메모 복원
+    if(d.memo) document.getElementById('memoTxt').value = d.memo;
+
+    showPanels();
+    renderAll();
+    const nb = document.getElementById('saveFirebaseBtn'); if(nb) nb.style.display = '';
+    toast(`✅ "${d.customerName || '견적'}" 불러오기 완료`);
+  }).catch(e => {
+    toast('⚠️ 불러오기 실패: ' + e.message);
+  });
+}
+
+// ═══ 견적 삭제 ═══
+function deleteQuote(docId) {
+  if(!confirm('이 견적을 삭제하시겠습니까?')) return;
+  db.collection('quotes').doc(docId).delete().then(() => {
+    toast('🗑 견적이 삭제되었습니다');
+    loadQuoteList();
+  }).catch(e => {
+    toast('⚠️ 삭제 실패: ' + e.message);
+  });
+}
+
+// 파싱 완료 시 저장 버튼 표시 (기존 doParse 보완)
+const _origShowPanels = showPanels;
+showPanels = function() {
+  _origShowPanels();
+  const fb = document.getElementById('saveFirebaseBtn');
+  if(fb) fb.style.display = '';
+};
 </script>
 </body>
 </html>
