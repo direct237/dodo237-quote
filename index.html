@@ -709,6 +709,7 @@ const DISC_ITEMS = [
   '티맵','후측방충돌'
 ];
 let discFilter = new Set();
+let discExtras = []; // DISC_ITEMS에 없는 파싱된 항목 보존용
 
 const COV_PRESETS = {
   basic:{ d2:'무한',dm:'5억원',js:'3억/5천',mu:'5억원',jc:'가입',em:'긴급출동서비스(확장)' },
@@ -1429,25 +1430,32 @@ function renderDiscGrid(){
     return `<div class="ins-tag${on?' on':''}" onclick="toggleDisc('${item}')">${item}</div>`;
   }).join('');
 }
+function _discSpecials(){
+  // discExtras(DISC_ITEMS 외 파싱 항목) + discFilter 선택 항목 합산
+  return [...discExtras, ...Array.from(discFilter)].join(',');
+}
 function toggleDisc(item){
   if(discFilter.has(item))discFilter.delete(item);else discFilter.add(item);
-  const v=cv();if(v)v.info.specials=Array.from(discFilter).join(',');
+  const v=cv();if(v)v.info.specials=_discSpecials();
   renderDiscGrid();renderCard();renderTxt();
 }
 function clearAllDisc(){
   discFilter.clear();
-  const v=cv();if(v)v.info.specials='';
+  const v=cv();if(v)v.info.specials=discExtras.join(',');
   renderDiscGrid();renderCard();renderTxt();
 }
 function syncDiscFromSpecials(specials){
   discFilter.clear();
+  discExtras=[];
   if(!specials)return;
   specials.split(/,/).map(s=>s.trim()).filter(Boolean).forEach(item=>{
     if(DISC_ITEMS.includes(item)){discFilter.add(item);return;}
-    // 퍼지 매칭: 파싱된 값이 목록 항목을 포함하거나 그 반대
+    // 퍼지 매칭
     for(const di of DISC_ITEMS){
       if(item.includes(di)||di.includes(item)){discFilter.add(di);return;}
     }
+    // 매칭 안 된 항목은 extras로 보존
+    discExtras.push(item);
   });
 }
 
