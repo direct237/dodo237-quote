@@ -738,14 +738,16 @@ function doParse() {
   const dbEl = document.getElementById('debugBox');
   if(dbEl) { dbEl.textContent = ''; dbEl.style.display = 'block'; }
 
-  // 소스 자동 감지
-  const isInsnara = raw.includes('가입예정일(') || raw.includes('보험기간(') || raw.includes('고객기본정보') ||
-                    raw.includes('적용요율') || raw.includes('연령특약') ||
-                    raw.includes('CM보험료') || raw.includes('TM보험료');
-  const isIcowon  = raw.includes('차량번호 :') || raw.includes('전계약사 :') ||
-                    raw.includes('납입방법 :') || raw.includes('기타특약 :');
-  if(isInsnara) source='insnara';
-  else if(isIcowon) source='icowon';
+  // 소스 자동 감지 — 아이코원 우선 (특별약관 탭 구분 형식이 고유)
+  const isIcowon  = raw.includes('특별약관\t') || raw.includes('차량가액 :') ||
+                    raw.includes('차량번호 :') || raw.includes('전계약사 :') ||
+                    raw.includes('납입방법 :') || raw.includes('기타특약 :') ||
+                    raw.includes('부속가액 :');
+  const isInsnara = !isIcowon && (raw.includes('가입예정일(') || raw.includes('보험기간(') ||
+                    raw.includes('고객기본정보') || raw.includes('적용요율') ||
+                    raw.includes('연령특약') || raw.includes('CM보험료') || raw.includes('TM보험료'));
+  if(isIcowon) source='icowon';
+  else if(isInsnara) source='insnara';
   document.getElementById('src-ico').className='srcbtn'+(source==='icowon'?' on':'');
   document.getElementById('src-ins').className='srcbtn'+(source==='insnara'?' on':'');
   dbg('소스: '+source);
@@ -1096,13 +1098,27 @@ function parseInsnara(raw) {
   let rawAge=ageM1?.[1]||ageM2?.[1]||'';
   if(rawAge){rawAge=rawAge.replace('세이상한정','세이상');if(!rawAge.startsWith('만'))rawAge='만'+rawAge;info.age=rawAge;}
 
-  // 기타특약
+  // 기타특약: 특별약관 섹션에서 직접 추출 (아이코원이 인스나라로 오감지된 경우 대비)
   const spItems=[];
-  if(txt.match(/블랙박스/))spItems.push('블랙박스할인');
-  if(txt.match(/블루링크|블루링크할인|커넥티드/))spItems.push('커넥티드');
-  if(txt.match(/마일리지/))spItems.push('마일리지 후할인');
-  if(txt.match(/첨단안전장치|ADAS/i))spItems.push('첨단안전장치');
-  if(txt.match(/T[\-\s]?map|티맵/i))spItems.push('T-map 할인');
+  const spSectM2=txt.match(/특별약관[\t ]*\n?([\s\S]+?)(?:메\s*모|선호보험사|기\s*본\s*보\s*험|==선택==|처리상태)/);
+  if(spSectM2){
+    const spSect2=spSectM2[1];
+    const airM2=spSect2.match(/에어백수\s*\d+개/);
+    if(airM2)spItems.push(airM2[0].trim());
+    if(spSect2.match(/마일리지|주행거리/))spItems.push('주행거리(마일리지) 후할인');
+    spSect2.split(/  +/).map(s=>s.trim()).filter(Boolean).forEach(chunk=>{
+      if(chunk.endsWith('할인')&&!chunk.includes('마일리지')&&!chunk.includes('주행거리'))
+        spItems.push(chunk);
+    });
+  }
+  // 폴백: 키워드 방식
+  if(!spItems.length){
+    if(txt.match(/블랙박스/))spItems.push('블랙박스할인');
+    if(txt.match(/블루링크|블루링크할인|커넥티드/))spItems.push('커넥티드');
+    if(txt.match(/마일리지/))spItems.push('마일리지 후할인');
+    if(txt.match(/첨단안전장치|ADAS/i))spItems.push('첨단안전장치');
+    if(txt.match(/T[\-\s]?map|티맵/i))spItems.push('T-map 할인');
+  }
   if(spItems.length)info.specials=spItems.join(',');
   dbg('운전: '+(info.drive||'?')+' / 연령: '+(info.age||'?'));
 
