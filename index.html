@@ -500,9 +500,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <div class="panel" id="txtPanel" style="display:none">
     <div class="ph"><span class="ico">💬</span>카카오톡 전송용 텍스트
       <div class="tabs" style="margin:0 0 0 auto" id="txtChTabs">
-        <div class="tab on" onclick="setTxtCh('off',this)">오프라인</div>
         <div class="tab" onclick="setTxtCh('cm',this)">CM</div>
         <div class="tab" onclick="setTxtCh('tm',this)">TM</div>
+        <div class="tab on" onclick="setTxtCh('off',this)">오프라인</div>
       </div>
     </div>
     <div class="txt-pre" id="txtPre"></div>
@@ -519,9 +519,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <div class="panel" style="max-width:800px">
     <div class="ph"><span class="ico">🖼️</span>이미지 카드 미리보기
       <div class="tabs" style="margin:0 0 0 auto" id="cardChTabs">
-        <div class="tab on" id="ct-off" onclick="setCh('off',null)">오프라인</div>
         <div class="tab" id="ct-cm" onclick="setCh('cm',null)">CM</div>
         <div class="tab" id="ct-tm" onclick="setCh('tm',null)">TM</div>
+        <div class="tab on" id="ct-off" onclick="setCh('off',null)">오프라인</div>
       </div>
     </div>
     <div class="cpreview">
@@ -539,9 +539,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
               <div class="cb-sub-title">최적의 특약과 보장을 찾다!</div>
               <div class="cb-period" id="pPeriod"></div>
               <div class="cb-chtabs no-print">
-                <button class="cbcht on" id="bc-off" onclick="setCh('off',null)">오프라인</button>
                 <button class="cbcht" id="bc-cm" onclick="setCh('cm',null)">CM</button>
                 <button class="cbcht" id="bc-tm" onclick="setCh('tm',null)">TM</button>
+                <button class="cbcht on" id="bc-off" onclick="setCh('off',null)">오프라인</button>
               </div>
             </div>
             <!-- 고객/차량 정보 -->
@@ -1581,9 +1581,9 @@ function renderMultiCard(){
               <div class="cb-sub-title">최적의 특약과 보장을 찾다!</div>
     <div class="cb-period">${I0.period?I0.period.replace(/-/g,'.').replace('~',' – '):''}</div>
     <div class="cb-chtabs no-print">
-      <button class="cbcht${ch==='off'?' on':''}" onclick="setCh('off',null)">오프라인</button>
       <button class="cbcht${ch==='cm'?' on':''}" onclick="setCh('cm',null)">CM</button>
       <button class="cbcht${ch==='tm'?' on':''}" onclick="setCh('tm',null)">TM</button>
+      <button class="cbcht${ch==='off'?' on':''}" onclick="setCh('off',null)">오프라인</button>
     </div>
   </div>
   <div class="card-info-block">
