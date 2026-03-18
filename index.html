@@ -768,9 +768,9 @@ function parseIcowon(raw) {
   // ── 고객명 (개인: 주민번호 6-7자리, 법인: 법인번호 6-4자리)
   const nameM = txt.match(/([가-힣]{2,5})\s*[\(（]\d{6}\s*-\s*[\d*]{7}[\)）]/);
   if(nameM) info.name = nameM[1];
-  // 법인: (주)태형이투 (101817 - 2053) 형태 — 번호가 6-4자리
+  // 법인: (주)태형이투    (101817 - 2053) 형태 — 번호가 6-4자리
   if(!info.name) {
-    const corpM = txt.match(/([\(（\)）가-힣a-zA-Z0-9\s]{2,30}?)\s*[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
+    const corpM = txt.match(/(\S+)\s+[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
     if(corpM) info.name = corpM[1].trim();
   }
   if(!info.name) {
@@ -944,7 +944,7 @@ function parseInsnara(raw) {
   const nameM=txt.match(/([가-힣]{2,5})\s*[\(（](\d{6}\s*-\s*[\d*]{7})[\)）]/);
   if(nameM) info.name=nameM[1];
   if(!info.name) {
-    const corpM=txt.match(/([\(（\)）가-힣a-zA-Z0-9\s]{2,30}?)\s*[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
+    const corpM=txt.match(/(\S+)\s+[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
     if(corpM) info.name=corpM[1].trim();
   }
   if(!info.name) {
@@ -2114,46 +2114,55 @@ function loadQuoteList() {
 
 // ═══ 견적 불러오기 ═══
 function loadQuote(docId) {
+  toast('📂 견적 불러오는 중...');
   db.collection('quotes').doc(docId).get().then(doc => {
     if(!doc.exists) { toast('⚠️ 견적을 찾을 수 없습니다'); return; }
     const d = doc.data();
+    console.log('loadQuote data:', d);
 
-    // 차량 데이터 복원
-    if(d.vehicles && d.vehicles.length) {
-      vehicles = d.vehicles.map(v => ({
-        id: v.id || Date.now(),
-        info: v.info || {},
-        coverages: v.coverages || [],
-        rankData: v.rankData || []
-      }));
-    } else {
-      vehicles = [{
-        id: Date.now(),
-        info: d.info || {},
-        coverages: d.coverages || [],
-        rankData: d.rankData || []
-      }];
+    try {
+      // 차량 데이터 복원
+      if(d.vehicles && d.vehicles.length) {
+        vehicles = d.vehicles.map(v => ({
+          id: v.id || Date.now(),
+          info: v.info || {},
+          coverages: v.coverages || [],
+          rankData: v.rankData || []
+        }));
+      } else {
+        vehicles = [{
+          id: Date.now(),
+          info: d.info || {},
+          coverages: d.coverages || [],
+          rankData: d.rankData || []
+        }];
+      }
+      vIdx = 0;
+
+      // 담보 복원
+      if(d.activeCov) activeCov = {...activeCov, ...d.activeCov};
+
+      // 보험사 필터 복원
+      insFilter = new Set(Object.keys(INS));
+
+      // 메모 복원
+      document.getElementById('memoTxt').value = d.memo || '';
+
+      // 패널 표시 및 렌더링
+      ['infoPanel','insFilterPanel','rankPanel','covEditPanel','memoPanel','txtPanel'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.style.display = '';
+      });
+      renderInsFilterGrid();
+      initCovEdit();
+      renderAll();
+
+      const nb = document.getElementById('saveFirebaseBtn'); if(nb) nb.style.display = '';
+      showPage('work');
+      toast(`✅ "${d.customerName || '견적'}" 불러오기 완료`);
+    } catch(err) {
+      console.error('loadQuote render error:', err);
+      toast('⚠️ 렌더링 오류: ' + err.message);
     }
-    vIdx = 0;
-
-    // 담보 복원
-    if(d.activeCov) activeCov = d.activeCov;
-
-    // 보험사 필터 복원: 저장된 rankData의 보험사 ID를 기반으로 설정
-    insFilter = new Set(Object.keys(INS));
-    const v0 = vehicles[0];
-    if(v0 && v0.rankData && v0.rankData.length) {
-      insFilter = new Set(v0.rankData.map(r => r.id));
-    }
-
-    // 메모 복원
-    document.getElementById('memoTxt').value = d.memo || '';
-
-    showPanels();
-    renderAll();
-    const nb = document.getElementById('saveFirebaseBtn'); if(nb) nb.style.display = '';
-    showPage('work');
-    toast(`✅ "${d.customerName || '견적'}" 불러오기 완료`);
   }).catch(e => {
     toast('⚠️ 불러오기 실패: ' + e.message);
   });
