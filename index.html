@@ -457,9 +457,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 
     <!-- 채널 탭 -->
     <div class="tabs" style="margin-bottom:8px" id="chTabs">
-      <div class="tab" onclick="setCh('cm',this)">CM 다이렉트</div>
+      <div class="tab on" onclick="setCh('cm',this)">CM 다이렉트</div>
       <div class="tab" onclick="setCh('tm',this)">TM 전화가입</div>
-      <div class="tab on" onclick="setCh('off',this)">오프라인(대리점)</div>
+      <div class="tab" onclick="setCh('off',this)">오프라인(대리점)</div>
     </div>
 
     <div class="rlist" id="rankList"></div>
@@ -500,9 +500,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <div class="panel" id="txtPanel" style="display:none">
     <div class="ph"><span class="ico">💬</span>카카오톡 전송용 텍스트
       <div class="tabs" style="margin:0 0 0 auto" id="txtChTabs">
-        <div class="tab" onclick="setTxtCh('cm',this)">CM</div>
+        <div class="tab on" onclick="setTxtCh('cm',this)">CM</div>
         <div class="tab" onclick="setTxtCh('tm',this)">TM</div>
-        <div class="tab on" onclick="setTxtCh('off',this)">오프라인</div>
+        <div class="tab" onclick="setTxtCh('off',this)">오프라인</div>
       </div>
     </div>
     <div class="txt-pre" id="txtPre"></div>
@@ -519,9 +519,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <div class="panel" style="max-width:800px">
     <div class="ph"><span class="ico">🖼️</span>이미지 카드 미리보기
       <div class="tabs" style="margin:0 0 0 auto" id="cardChTabs">
-        <div class="tab" id="ct-cm" onclick="setCh('cm',null)">CM</div>
+        <div class="tab on" id="ct-cm" onclick="setCh('cm',null)">CM</div>
         <div class="tab" id="ct-tm" onclick="setCh('tm',null)">TM</div>
-        <div class="tab on" id="ct-off" onclick="setCh('off',null)">오프라인</div>
+        <div class="tab" id="ct-off" onclick="setCh('off',null)">오프라인</div>
       </div>
     </div>
     <div class="cpreview">
@@ -533,15 +533,15 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
             <div class="cbanner">
               <div class="cb-top">
                 <span class="cb-logo">DODO237</span>
-                <span class="cb-badge-ch" id="pChBadge">오프라인</span>
+                <span class="cb-badge-ch" id="pChBadge">CM 다이렉트</span>
               </div>
               <div class="cb-main-title">다이렉트자동차보험 비교견적</div>
               <div class="cb-sub-title">최적의 특약과 보장을 찾다!</div>
               <div class="cb-period" id="pPeriod"></div>
               <div class="cb-chtabs no-print">
-                <button class="cbcht" id="bc-cm" onclick="setCh('cm',null)">CM</button>
+                <button class="cbcht on" id="bc-cm" onclick="setCh('cm',null)">CM</button>
                 <button class="cbcht" id="bc-tm" onclick="setCh('tm',null)">TM</button>
-                <button class="cbcht on" id="bc-off" onclick="setCh('off',null)">오프라인</button>
+                <button class="cbcht" id="bc-off" onclick="setCh('off',null)">오프라인</button>
               </div>
             </div>
             <!-- 고객/차량 정보 -->
@@ -686,8 +686,8 @@ const INS = {
 // 상태
 // ═══════════════════════════════════════════════════════════════
 let source = 'icowon';
-let ch = 'off';
-let txtCh = 'off';
+let ch = 'cm';
+let txtCh = 'cm';
 let vehicles = [];
 let vIdx = 0;
 let dragSrc = null;
@@ -1409,13 +1409,16 @@ function de(){dragSrc=null;document.querySelectorAll('.rrow').forEach(r=>r.class
 // ═══════════════════════════════════════════════════════════════
 function setCh(c,el){
   ch=c;
-  if(el){el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');}
-  // card ch tabs sync
+  // 모든 채널 탭 동기화 (ID 기반)
   ['off','cm','tm'].forEach(x=>{
     const ct=document.getElementById('ct-'+x);if(ct)ct.className='tab'+(x===c?' on':'');
     const bc=document.getElementById('bc-'+x);if(bc)bc.className='cbcht'+(x===c?' on':'');
   });
-  document.querySelectorAll('#chTabs .tab').forEach((t,i)=>t.classList.toggle('on',['cm','tm','off'][i]===c));
+  // 보험사 순위 편집 탭 — onclick에서 전달된 el 또는 data-ch 속성으로 동기화
+  document.querySelectorAll('#chTabs .tab').forEach(t=>{
+    const tabCh = t.getAttribute('onclick')?.match(/'(off|cm|tm)'/)?.[1];
+    t.classList.toggle('on', tabCh===c);
+  });
   renderRankList();renderCard();
 }
 
