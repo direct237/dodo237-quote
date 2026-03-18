@@ -1121,8 +1121,8 @@ function parseInsnara(raw) {
   if(driveM1) info.drive=driveM1[1];
   else if(driveM2) info.drive=driveM2[1];
 
-  // 연령 ("연령특약48세이상" → "만48세이상")
-  const ageM1=txt.match(/연령특약(\d+세이상)/);
+  // 연령 ("연령특약\t35세이상" 또는 "연령특약48세이상" → "만35세이상")
+  const ageM1=txt.match(/연령특약[\s\t]*(\d+세이상)/);
   const ageM2=txt.match(/(만\d+세이상|\d+세이상한정|\d+세이상)/);
   let rawAge=ageM1?.[1]||ageM2?.[1]||'';
   if(rawAge){rawAge=rawAge.replace('세이상한정','세이상');if(!rawAge.startsWith('만'))rawAge='만'+rawAge;info.age=rawAge;}
