@@ -769,11 +769,13 @@ function doParse() {
     });
     if(Object.keys(parsedCov).length>0) activeCov={...COV_PRESETS.basic,...parsedCov};
 
-    // 채널 초기화: CM 기본
-    setCh('cm', null);
-
     showPanels();
+    // 채널 초기화: CM 기본 (renderAll 전에 ch 값 설정)
+    ch = 'cm';
+    txtCh = 'cm';
     renderAll();
+    // 탭 UI 동기화
+    setCh('cm', null);
     document.getElementById('pstatus').textContent = `✅ ${result.insurers.length}개 파싱 완료`;
     const nb=document.getElementById('saveNotionBtn');if(nb)nb.style.display='';
     toast(`✅ ${result.insurers.length}개 보험사 파싱 완료!`);
