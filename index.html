@@ -392,9 +392,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <!-- 1. 붙여넣기 -->
   <div class="panel">
     <div class="ph"><span class="ico">📋</span>견적 데이터 붙여넣기
-      <span id="src-hint" style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px">아이코원 견적화면 Ctrl+A → Ctrl+C → 붙여넣기</span>
+      <span id="paste-hint" style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px">인스나라 견적화면 Ctrl+A → Ctrl+C → 붙여넣기</span>
     </div>
-    <textarea id="pasteArea" rows="7" placeholder="아이코원 견적 화면에서 Ctrl+A로 전체 선택, Ctrl+C로 복사 후 여기에 붙여넣기 하세요.
+    <textarea id="pasteArea" rows="7" placeholder="인스나라 또는 아이코원 견적 화면에서 Ctrl+A로 전체 선택, Ctrl+C로 복사 후 여기에 붙여넣기 하세요.
 
 지원 데이터: 고객정보 / 차량정보 / 보험기간 / 담보선택 / 보험사별 총금액"></textarea>
     <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
@@ -748,8 +748,9 @@ function setSrc(s){
   srcManual=true;
   document.getElementById('src-ico').className='srcbtn'+(s==='icowon'?' on':'');
   document.getElementById('src-ins').className='srcbtn'+(s==='insnara'?' on':'');
-  const hint=document.getElementById('src-hint');
-  if(hint)hint.textContent=s==='icowon'?'아이코원 견적화면 Ctrl+A → Ctrl+C':'인스나라 견적화면 Ctrl+A → Ctrl+C';
+  const hintIco=s==='icowon'?'아이코원 견적화면 Ctrl+A → Ctrl+C':'인스나라 견적화면 Ctrl+A → Ctrl+C';
+  const h1=document.getElementById('src-hint');if(h1)h1.textContent=hintIco;
+  const h2=document.getElementById('paste-hint');if(h2)h2.textContent=(s==='icowon'?'아이코원':'인스나라')+' 견적화면 Ctrl+A → Ctrl+C → 붙여넣기';
 }
 
 function doParse() {
@@ -773,6 +774,9 @@ function doParse() {
   srcManual=false; // 다음 파싱부터는 다시 자동 감지
   document.getElementById('src-ico').className='srcbtn'+(source==='icowon'?' on':'');
   document.getElementById('src-ins').className='srcbtn'+(source==='insnara'?' on':'');
+  {const lbl=source==='icowon'?'아이코원':'인스나라';
+   const h1=document.getElementById('src-hint');if(h1)h1.textContent=lbl+' 견적화면 Ctrl+A → Ctrl+C';
+   const h2=document.getElementById('paste-hint');if(h2)h2.textContent=lbl+' 견적화면 Ctrl+A → Ctrl+C → 붙여넣기';}
   dbg('소스: '+source);
 
   try {
