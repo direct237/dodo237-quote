@@ -695,6 +695,7 @@ const INS = {
 // 상태
 // ═══════════════════════════════════════════════════════════════
 let source = 'icowon';
+let srcManual = false; // 수동 소스 선택 여부
 let ch = 'cm';
 let txtCh = 'cm';
 let vehicles = [];
@@ -744,6 +745,7 @@ function toggleDebug(){const el=document.getElementById('debugBox');el.style.dis
 // ═══════════════════════════════════════════════════════════════
 function setSrc(s){
   source=s;
+  srcManual=true;
   document.getElementById('src-ico').className='srcbtn'+(s==='icowon'?' on':'');
   document.getElementById('src-ins').className='srcbtn'+(s==='insnara'?' on':'');
   const hint=document.getElementById('src-hint');
@@ -756,16 +758,19 @@ function doParse() {
   const dbEl = document.getElementById('debugBox');
   if(dbEl) { dbEl.textContent = ''; dbEl.style.display = 'block'; }
 
-  // 소스 자동 감지 — 아이코원 우선 (특별약관 탭 구분 형식이 고유)
-  const isIcowon  = raw.includes('특별약관\t') || raw.includes('차량가액 :') ||
-                    raw.includes('차량번호 :') || raw.includes('전계약사 :') ||
-                    raw.includes('납입방법 :') || raw.includes('기타특약 :') ||
-                    raw.includes('부속가액 :');
-  const isInsnara = !isIcowon && (raw.includes('가입예정일(') || raw.includes('보험기간(') ||
-                    raw.includes('고객기본정보') || raw.includes('적용요율') ||
-                    raw.includes('연령특약') || raw.includes('CM보험료') || raw.includes('TM보험료'));
-  if(isIcowon) source='icowon';
-  else if(isInsnara) source='insnara';
+  // 소스 자동 감지 — 수동 선택 시 건너뜀
+  if(!srcManual){
+    const isIcowon  = raw.includes('특별약관\t') || raw.includes('차량가액 :') ||
+                      raw.includes('차량번호 :') || raw.includes('전계약사 :') ||
+                      raw.includes('납입방법 :') || raw.includes('기타특약 :') ||
+                      raw.includes('부속가액 :');
+    const isInsnara = !isIcowon && (raw.includes('가입예정일(') || raw.includes('보험기간(') ||
+                      raw.includes('고객기본정보') || raw.includes('적용요율') ||
+                      raw.includes('연령특약') || raw.includes('CM보험료') || raw.includes('TM보험료'));
+    if(isIcowon) source='icowon';
+    else if(isInsnara) source='insnara';
+  }
+  srcManual=false; // 다음 파싱부터는 다시 자동 감지
   document.getElementById('src-ico').className='srcbtn'+(source==='icowon'?' on':'');
   document.getElementById('src-ins').className='srcbtn'+(source==='insnara'?' on':'');
   dbg('소스: '+source);
