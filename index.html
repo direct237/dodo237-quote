@@ -769,6 +769,9 @@ function doParse() {
     });
     if(Object.keys(parsedCov).length>0) activeCov={...COV_PRESETS.basic,...parsedCov};
 
+    // 채널 초기화: CM 기본
+    setCh('cm', null);
+
     showPanels();
     renderAll();
     document.getElementById('pstatus').textContent = `✅ ${result.insurers.length}개 파싱 완료`;
