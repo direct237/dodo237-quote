@@ -2167,6 +2167,8 @@ function loadQuote(docId) {
       renderAll();
 
       const nb = document.getElementById('saveFirebaseBtn'); if(nb) nb.style.display = '';
+      document.getElementById('pasteArea').value = '';
+      document.getElementById('pstatus').textContent = `📂 저장된 견적 불러옴`;
       showPage('work');
       toast(`✅ "${d.customerName || '견적'}" 불러오기 완료`);
     } catch(err) {
