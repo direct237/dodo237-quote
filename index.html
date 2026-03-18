@@ -1115,8 +1115,9 @@ function parseInsnara(raw) {
   if(dgM) info.discGrade=dgM[1];
 
   // 운전범위
-  const driveM1=txt.match(/운전범위(1인\(기명\)|1인\(지정\)|부부한정|가족한정|가족|부부\+자녀|누구나|임직원|자녀한정)/);
-  const driveM2=txt.match(/(부부\+자녀|부부한정|가족한정|1인\(기명\)|1인\(지정\)|누구나)/);
+  const driveKws='부부\\+자녀|부부한정|부부\\+1인|가족한정|가족\\+형제|가족\\+1인|가족|누구나운전|누구나|기명1인한정|1인\\(기명\\)|1인\\(지정\\)|1인한정|임직원한정|자녀한정';
+  const driveM1=txt.match(new RegExp('(?:운전자?범위)[\\s:：\\t]*(' +driveKws+ ')'));
+  const driveM2=txt.match(new RegExp('(' +driveKws+ ')'));
   if(driveM1) info.drive=driveM1[1];
   else if(driveM2) info.drive=driveM2[1];
 
