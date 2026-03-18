@@ -317,8 +317,8 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 <div class="topbar">
   <h1>🚗 도도237 비교견적 변환</h1>
   <span class="ver">v5</span>
-  <button class="srcbtn on" id="src-ico" onclick="setSrc('icowon')">아이코원</button>
   <button class="srcbtn" id="src-ins" onclick="setSrc('insnara')">인스나라</button>
+  <button class="srcbtn on" id="src-ico" onclick="setSrc('icowon')">아이코원</button>
   <span id="src-hint" style="font-size:10px;color:rgba(255,255,255,.55);font-weight:400;margin-left:6px">아이코원 견적화면 Ctrl+A → Ctrl+C</span>
   <div class="user-info" id="userInfo" style="display:none">
     <button class="srcbtn" id="navListBtn" onclick="showPage('list')" style="background:rgba(255,255,255,.15)">📂 견적 리스트</button>
@@ -2035,7 +2035,8 @@ function saveQuote() {
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     customerName: v.info?.name || '미입력',
     carNo: v.info?.carno || '',
-    carName: v.info?.carname || ''
+    carName: v.info?.carname || '',
+    period: v.info?.period || ''
   };
 
   const btn = document.getElementById('saveFirebaseBtn');
@@ -2076,13 +2077,16 @@ function loadQuoteList() {
         const d = doc.data();
         const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
         const name = d.customerName || '미입력';
-        const car = d.carName ? d.carName.slice(0, 12) : '';
+        const car = d.carName ? d.carName.slice(0, 15) : '';
         const carNo = d.carNo || '';
+        const period = d.period || '';
         const user = d.userName || d.userEmail || '';
         const isOwner = d.userId === currentUser.uid;
         return `<div class="ql-row" onclick="loadQuote('${doc.id}')">
-          <div class="ql-name">${name} ${carNo ? '('+carNo+')' : ''}</div>
+          <div class="ql-name">${name}</div>
+          <div class="ql-meta">${carNo}</div>
           <div class="ql-meta">${car}</div>
+          <div class="ql-meta">${period}</div>
           <div class="ql-meta">${date}</div>
           <div class="ql-user">${user}</div>
           ${isOwner ? `<button class="ql-del" onclick="event.stopPropagation();deleteQuote('${doc.id}')" title="삭제">✕</button>` : ''}
