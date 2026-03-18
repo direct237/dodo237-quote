@@ -1338,7 +1338,7 @@ function cardUpdPV(id,c,val,vi){
   if(c==='off'){d.cm=cmP(p,id);d.tm=tmP(p,id);}
   renderMultiCard();renderTxt();renderSumRow();
 }
-function mvR(i,d){const v=cv();if(!v)return;const data=v.rankData;if(i+d<0||i+d>=data.length)return;[data[i],data[i+d]]=[data[i+d],data[i]];renderRankList();renderCard();renderTxt();}
+function mvR(i,d){const v=cv();if(!v)return;const data=v.rankData;if(i+d<0||i+d>=data.length)return;[data[i],data[i+d]]=[data[i+d],data[i]];data.forEach((dd,idx)=>dd._idx=idx);renderRankList();renderCard();renderTxt();}
 function rmR(i){const v=cv();if(!v)return;v.rankData.splice(i,1);renderRankList();renderCard();renderTxt();}
 // ══ 보험사 선택 필터 ══
 function renderInsFilterGrid(){
@@ -1487,10 +1487,10 @@ function renderCard(){
       mkCell('sos','긴급출동','예('+emShort+')');
   }
 
-  // 보험사 목록
+  // 보험사 목록 (rankData 순서 유지, 정렬하지 않음 — 순서는 화살표/드래그로 변경)
   data.forEach((d,i)=>d._idx=i);
-  const vis=data.filter(d=>insFilter.has(d.id)&&gP(d)>0).sort((a,b)=>gP(a)-gP(b));
-  const minP=vis[0]?gP(vis[0]):0;
+  const vis=data.filter(d=>insFilter.has(d.id)&&gP(d)>0);
+  const minP=vis.length?Math.min(...vis.map(d=>gP(d))):0;
   const pInsList=document.getElementById('pInsList');
   // 할인특약 먼저 업데이트 (데이터 없어도 표시)
   const discEl=document.getElementById('pDiscount');
