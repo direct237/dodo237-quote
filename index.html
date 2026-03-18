@@ -1425,38 +1425,43 @@ function toggleAllIns(){
 // ══ 할인특약 선택 ══
 function renderDiscGrid(){
   const el=document.getElementById('discGrid');if(!el)return;
+  // cv().info.specials를 직접 읽어 체크 상태 결정
+  const cur=new Set((cv()?.info?.specials||'').split(',').map(s=>s.trim()).filter(Boolean));
   el.innerHTML=DISC_ITEMS.map(item=>{
-    const on=discFilter.has(item);
+    const on=cur.has(item);
     return `<div class="ins-tag${on?' on':''}" onclick="toggleDisc('${item}')">${item}</div>`;
   }).join('');
 }
-function _discSpecials(){
-  // discExtras(DISC_ITEMS 외 파싱 항목) + discFilter 선택 항목 합산
-  return [...discExtras, ...Array.from(discFilter)].join(',');
-}
 function toggleDisc(item){
-  if(discFilter.has(item))discFilter.delete(item);else discFilter.add(item);
-  const v=cv();if(v)v.info.specials=_discSpecials();
+  const v=cv();if(!v)return;
+  // cv().info.specials를 직접 읽고 토글
+  const cur=(v.info.specials||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const idx=cur.indexOf(item);
+  if(idx>=0)cur.splice(idx,1);else cur.push(item);
+  v.info.specials=cur.join(',');
   renderDiscGrid();renderCard();renderTxt();
 }
 function clearAllDisc(){
-  discFilter.clear();
-  const v=cv();if(v)v.info.specials=discExtras.join(',');
+  const v=cv();if(!v)return;
+  // DISC_ITEMS 항목만 제거, 나머지(extras) 유지
+  const cur=(v.info.specials||'').split(',').map(s=>s.trim()).filter(Boolean);
+  v.info.specials=cur.filter(s=>!DISC_ITEMS.includes(s)).join(',');
   renderDiscGrid();renderCard();renderTxt();
 }
 function syncDiscFromSpecials(specials){
-  discFilter.clear();
-  discExtras=[];
-  if(!specials)return;
-  specials.split(/,/).map(s=>s.trim()).filter(Boolean).forEach(item=>{
-    if(DISC_ITEMS.includes(item)){discFilter.add(item);return;}
-    // 퍼지 매칭
+  // 파싱된 specials를 DISC_ITEMS 이름으로 정규화하여 cv().info.specials에 즉시 반영
+  const v=cv();if(!v)return;
+  if(!specials){return;}
+  const result=[];
+  specials.split(',').map(s=>s.trim()).filter(Boolean).forEach(item=>{
+    if(DISC_ITEMS.includes(item)){if(!result.includes(item))result.push(item);return;}
+    // 퍼지 매칭: "블루링크할인" → "블루링크"
     for(const di of DISC_ITEMS){
-      if(item.includes(di)||di.includes(item)){discFilter.add(di);return;}
+      if(item.includes(di)||di.includes(item)){if(!result.includes(di))result.push(di);return;}
     }
-    // 매칭 안 된 항목은 extras로 보존
-    discExtras.push(item);
+    result.push(item); // DISC_ITEMS 외 항목은 그대로 유지
   });
+  v.info.specials=result.join(',');
 }
 
 // ══ 보장금액 편집 ══
