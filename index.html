@@ -2289,7 +2289,11 @@ function loadQuote(docId) {
       });
       renderInsFilterGrid();
       initCovEdit();
+      // 채널 초기화: CM 기본
+      ch = 'cm';
+      txtCh = 'cm';
       renderAll();
+      setCh('cm', null);
 
       const nb = document.getElementById('saveFirebaseBtn'); if(nb) nb.style.display = '';
       document.getElementById('pasteArea').value = '';
