@@ -21,7 +21,7 @@ body{background:var(--bg);font-family:'Noto Sans KR','Malgun Gothic',sans-serif;
 /* TOP */
 .topbar{background:var(--blue);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .topbar h1{font-size:15px;font-weight:700;letter-spacing:-.3px}
-.srcbtn{padding:4px 12px;border-radius:10px;font-size:11px;cursor:pointer;border:none;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);margin-left:auto}
+.srcbtn{padding:4px 12px;border-radius:10px;font-size:11px;cursor:pointer;border:none;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8)}
 .srcbtn.on{background:#fff;color:var(--blue);font-weight:700}
 .ver{background:rgba(255,255,255,.2);padding:2px 7px;border-radius:8px;font-size:10px}
 
@@ -321,26 +321,32 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <button class="srcbtn" id="src-ins" onclick="setSrc('insnara')">인스나라</button>
   <span id="src-hint" style="font-size:10px;color:rgba(255,255,255,.55);font-weight:400;margin-left:6px">아이코원 견적화면 Ctrl+A → Ctrl+C</span>
   <div class="user-info" id="userInfo" style="display:none">
+    <button class="srcbtn" id="navListBtn" onclick="showPage('list')" style="background:rgba(255,255,255,.15)">📂 견적 리스트</button>
+    <button class="srcbtn on" id="navWorkBtn" onclick="showPage('work')" style="display:none">🔧 작업화면</button>
     <img class="user-avatar" id="userAvatar" src="" alt="">
     <span class="user-name" id="userName"></span>
     <button class="logout-btn" onclick="googleLogout()">로그아웃</button>
   </div>
 </div>
 
-<div class="wrap">
-<!-- ═══ LEFT ═══ -->
-<div class="lcol">
-
-  <!-- 0. 저장된 견적 리스트 -->
-  <div class="quote-list-panel" id="quoteListPanel">
+<!-- ═══ 견적 리스트 페이지 ═══ -->
+<div id="pageList" style="display:none;max-width:900px;margin:0 auto;padding:12px">
+  <div class="panel">
     <div class="ph"><span class="ico">📂</span>저장된 견적 리스트
       <span id="quoteCount" style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px"></span>
       <button class="btn sm" style="margin-left:auto" onclick="loadQuoteList()">🔄 새로고침</button>
     </div>
-    <div id="quoteList" style="max-height:200px;overflow-y:auto">
+    <div id="quoteList">
       <div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">로그인 후 저장된 견적이 표시됩니다</div>
     </div>
   </div>
+</div>
+
+<!-- ═══ 작업 페이지 ═══ -->
+<div id="pageWork">
+<div class="wrap">
+<!-- ═══ LEFT ═══ -->
+<div class="lcol">
 
   <!-- 1. 붙여넣기 -->
   <div class="panel">
@@ -566,6 +572,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 </div>
 
 </div><!-- /wrap -->
+</div><!-- /pageWork -->
 
 <!-- ═══ 동일증권 차량 추가 모달 ═══ -->
 <div class="modal-bg" id="multiModal">
@@ -1953,6 +1960,26 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 let currentUser = null;
 
+// 페이지 전환
+function showPage(page) {
+  const pageList = document.getElementById('pageList');
+  const pageWork = document.getElementById('pageWork');
+  const navListBtn = document.getElementById('navListBtn');
+  const navWorkBtn = document.getElementById('navWorkBtn');
+  if(page === 'list') {
+    pageList.style.display = '';
+    pageWork.style.display = 'none';
+    navListBtn.style.display = 'none';
+    navWorkBtn.style.display = '';
+    loadQuoteList();
+  } else {
+    pageList.style.display = 'none';
+    pageWork.style.display = '';
+    navListBtn.style.display = '';
+    navWorkBtn.style.display = 'none';
+  }
+}
+
 // 구글 로그인
 function googleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -2101,6 +2128,7 @@ function loadQuote(docId) {
     showPanels();
     renderAll();
     const nb = document.getElementById('saveFirebaseBtn'); if(nb) nb.style.display = '';
+    showPage('work');
     toast(`✅ "${d.customerName || '견적'}" 불러오기 완료`);
   }).catch(e => {
     toast('⚠️ 불러오기 실패: ' + e.message);
