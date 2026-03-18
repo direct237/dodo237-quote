@@ -296,6 +296,23 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 .ql-user{font-size:10px;color:var(--text2);background:#f1f5f9;padding:1px 6px;border-radius:4px}
 .ql-del{width:20px;height:20px;border:none;background:none;color:var(--red);cursor:pointer;font-size:13px;opacity:.5}
 .ql-del:hover{opacity:1}
+
+/* ═══ 관리자 페이지 ═══ */
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.admin-stat{background:#f8fafc;border-radius:8px;padding:12px;text-align:center;border:.5px solid var(--border)}
+.admin-stat .st-val{font-size:22px;font-weight:700;color:var(--blue)}
+.admin-stat .st-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+.user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:.5px solid var(--border);border-radius:7px;margin-bottom:4px;background:#fff}
+.user-row:hover{background:#f8fafc}
+.user-avatar-sm{width:32px;height:32px;border-radius:50%;flex-shrink:0}
+.user-name-col{flex:1}
+.user-name-main{font-size:13px;font-weight:600;color:var(--text)}
+.user-name-email{font-size:10px;color:var(--text3)}
+.user-meta{font-size:10px;color:var(--text2);text-align:right}
+.user-del-btn{padding:4px 10px;border-radius:5px;border:.5px solid #fee2e2;background:#fff5f5;color:var(--red);font-size:11px;cursor:pointer;font-family:inherit}
+.user-del-btn:hover{background:#fee2e2}
+.admin-btn{padding:3px 8px;border-radius:6px;font-size:10px;cursor:pointer;border:1px solid rgba(255,255,255,.25);background:rgba(255,193,7,.2);color:#ffd54f;font-family:inherit;font-weight:600}
+.admin-btn:hover{background:rgba(255,193,7,.35)}
 </style>
 </head>
 <body>
@@ -323,9 +340,24 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <div class="user-info" id="userInfo" style="display:none">
     <button class="srcbtn" id="navListBtn" onclick="showPage('list')" style="background:rgba(255,255,255,.15)">📂 견적 리스트</button>
     <button class="srcbtn on" id="navWorkBtn" onclick="showPage('work')" style="display:none">🔧 작업화면</button>
+    <button class="admin-btn" id="navAdminBtn" onclick="showPage('admin')" style="display:none">⚙ 관리자</button>
     <img class="user-avatar" id="userAvatar" src="" alt="">
     <span class="user-name" id="userName"></span>
     <button class="logout-btn" onclick="googleLogout()">로그아웃</button>
+  </div>
+</div>
+
+<!-- ═══ 관리자 페이지 ═══ -->
+<div id="pageAdmin" style="display:none;max-width:900px;margin:0 auto;padding:12px">
+  <div class="panel">
+    <div class="ph"><span class="ico">⚙</span>사용자 관리
+      <span id="userCount" style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px"></span>
+      <button class="btn sm" style="margin-left:auto" onclick="loadUserList()">🔄 새로고침</button>
+    </div>
+    <div class="admin-stats" id="adminStats"></div>
+    <div id="userList">
+      <div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">불러오는 중...</div>
+    </div>
   </div>
 </div>
 
@@ -1987,19 +2019,26 @@ let currentUser = null;
 function showPage(page) {
   const pageList = document.getElementById('pageList');
   const pageWork = document.getElementById('pageWork');
+  const pageAdmin = document.getElementById('pageAdmin');
   const navListBtn = document.getElementById('navListBtn');
   const navWorkBtn = document.getElementById('navWorkBtn');
+  // 모든 페이지 숨기기
+  pageList.style.display = 'none';
+  pageWork.style.display = 'none';
+  pageAdmin.style.display = 'none';
+  navListBtn.style.display = '';
+  navWorkBtn.style.display = 'none';
   if(page === 'list') {
     pageList.style.display = '';
-    pageWork.style.display = 'none';
     navListBtn.style.display = 'none';
     navWorkBtn.style.display = '';
     loadQuoteList();
+  } else if(page === 'admin') {
+    pageAdmin.style.display = '';
+    navWorkBtn.style.display = '';
+    loadUserList();
   } else {
-    pageList.style.display = 'none';
     pageWork.style.display = '';
-    navListBtn.style.display = '';
-    navWorkBtn.style.display = 'none';
   }
 }
 
@@ -2027,6 +2066,10 @@ auth.onAuthStateChanged(user => {
     userInfo.style.display = 'flex';
     document.getElementById('userAvatar').src = user.photoURL || '';
     document.getElementById('userName').textContent = user.displayName || user.email;
+    saveUserInfo(user);
+    // 관리자 버튼 표시
+    const adminBtn = document.getElementById('navAdminBtn');
+    if(adminBtn) adminBtn.style.display = ADMIN_EMAILS.includes(user.email) ? '' : 'none';
     loadQuoteList();
   } else {
     overlay.style.display = 'flex';
@@ -2198,6 +2241,106 @@ showPanels = function() {
   const fb = document.getElementById('saveFirebaseBtn');
   if(fb) fb.style.display = '';
 };
+
+// ═══════════════════════════════════════════════════════════════
+// 관리자 기능
+// ═══════════════════════════════════════════════════════════════
+const ADMIN_EMAILS = ['reallove3340@gmail.com', 'rtdodo237@gmail.com'];
+function isAdmin() { return currentUser && ADMIN_EMAILS.includes(currentUser.email); }
+
+// 로그인 시 사용자 정보 저장
+function saveUserInfo(user) {
+  db.collection('users').doc(user.uid).set({
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName || '',
+    photoURL: user.photoURL || '',
+    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
+// 사용자 목록 불러오기
+function loadUserList() {
+  if(!isAdmin()) return;
+  const listEl = document.getElementById('userList');
+  const countEl = document.getElementById('userCount');
+  const statsEl = document.getElementById('adminStats');
+  listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:10px">불러오는 중...</div>';
+
+  Promise.all([
+    db.collection('users').orderBy('lastLogin', 'desc').get(),
+    db.collection('quotes').get()
+  ]).then(([userSnap, quoteSnap]) => {
+    const userCount = userSnap.size;
+    const quoteCount = quoteSnap.size;
+
+    // 사용자별 견적 수 집계
+    const quoteCounts = {};
+    quoteSnap.docs.forEach(doc => {
+      const uid = doc.data().userId;
+      quoteCounts[uid] = (quoteCounts[uid] || 0) + 1;
+    });
+
+    // 오늘 로그인한 사용자 수
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const todayActive = userSnap.docs.filter(doc => {
+      const d = doc.data();
+      return d.lastLogin && d.lastLogin.seconds * 1000 >= today.getTime();
+    }).length;
+
+    countEl.textContent = `(${userCount}명)`;
+    statsEl.innerHTML = `
+      <div class="admin-stat"><div class="st-val">${userCount}</div><div class="st-lbl">전체 사용자</div></div>
+      <div class="admin-stat"><div class="st-val">${todayActive}</div><div class="st-lbl">오늘 활동</div></div>
+      <div class="admin-stat"><div class="st-val">${quoteCount}</div><div class="st-lbl">전체 견적</div></div>
+    `;
+
+    if(userSnap.empty) {
+      listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">등록된 사용자가 없습니다</div>';
+      return;
+    }
+
+    listEl.innerHTML = userSnap.docs.map(doc => {
+      const u = doc.data();
+      const lastLogin = u.lastLogin ? new Date(u.lastLogin.seconds * 1000).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+      const qCount = quoteCounts[u.uid] || 0;
+      const isSelf = u.uid === currentUser.uid;
+      const isAdminUser = ADMIN_EMAILS.includes(u.email);
+      return `<div class="user-row">
+        <img class="user-avatar-sm" src="${u.photoURL || ''}" alt="" onerror="this.style.background='#e2e8f0'">
+        <div class="user-name-col">
+          <div class="user-name-main">${u.displayName || '이름없음'} ${isAdminUser ? '<span style="font-size:9px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px">관리자</span>' : ''}</div>
+          <div class="user-name-email">${u.email}</div>
+        </div>
+        <div class="user-meta">견적 ${qCount}건<br>마지막 ${lastLogin}</div>
+        ${!isSelf && !isAdminUser ? `<button class="user-del-btn" onclick="deleteUser('${u.uid}','${u.displayName || u.email}')">삭제</button>` : ''}
+      </div>`;
+    }).join('');
+  }).catch(e => {
+    listEl.innerHTML = '<div style="text-align:center;color:var(--red);font-size:12px;padding:10px">⚠️ 불러오기 실패</div>';
+    console.error(e);
+  });
+}
+
+// 사용자 삭제 (Firestore에서 사용자 정보 + 해당 사용자 견적 삭제)
+function deleteUser(uid, name) {
+  if(!confirm(`"${name}" 사용자를 삭제하시겠습니까?\n해당 사용자의 모든 견적도 함께 삭제됩니다.`)) return;
+
+  // 해당 사용자의 견적 삭제
+  db.collection('quotes').where('userId', '==', uid).get().then(snap => {
+    const batch = db.batch();
+    snap.docs.forEach(doc => batch.delete(doc.ref));
+    batch.delete(db.collection('users').doc(uid));
+    return batch.commit();
+  }).then(() => {
+    toast('🗑 사용자 및 견적이 삭제되었습니다');
+    loadUserList();
+  }).catch(e => {
+    toast('⚠️ 삭제 실패: ' + e.message);
+    console.error(e);
+  });
+}
 </script>
 </body>
 </html>
