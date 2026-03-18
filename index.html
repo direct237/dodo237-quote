@@ -854,23 +854,31 @@ function parseIcowon(raw) {
 
   // ── 보험기간
   const perdM = txt.match(/(\d{4}-\d{2}-\d{2})\s*~\s*(\d{4}-\d{2}-\d{2})/);
+  const joinM = txt.match(/가입예정일[\(（](\d{4}-\d{2}-\d{2})[\)）]/);
   if(perdM){ info.period=perdM[1]+'~'+perdM[2]; info.startDate=perdM[1]; }
+  else if(joinM){
+    const s=joinM[1],parts=s.split('-');
+    info.period=s+'~'+(parseInt(parts[0])+1)+'-'+parts[1]+'-'+parts[2];
+    info.startDate=s;
+  }
 
-  // ── 차량번호 — 숫자+한글+숫자 형태 (예: 69구0578, 123가4567)
-  // 차량번호: 일반형(숫자+한글+숫자), 지역명형, 미등록신차(한글1자) 처리
-  const carnoRaw = txt.match(/차량번호\s*[:：]\s*([^ㆍ·•\n\r]+)/)?.[1]?.trim()||'';
-  const carnoM = txt.match(/차량번호\s*[:：]\s*(\d{1,3}[가-힣]\d{4})/);
+  // ── 차량번호
+  const carnoM  = txt.match(/차량번호\s*[:：]\s*(\d{1,3}[가-힣]\d{4})/);
   const carnoM2 = txt.match(/차량번호\s*[:：]\s*([가-힣]{2}\d{4})/);
-  const carnoM3 = txt.match(/차량번호\s*[:：]\s*([가-힣]{1,2})\s*(?:ㆍ|$)/); // 미등록 신차
-  const carnoM4 = txt.match(/(?<!\S)(\d{2,3}[가-힣]\d{4})(?!\S)/);
+  const carnoM3 = txt.match(/(?:자동차사항|차량번호)[\s\t:]*0*([1-9]\d{1,2}[가-힣]\d{4})/); // "자동차사항  00가1234"
+  const carnoM4 = txt.match(/\b0*([1-9]\d{1,2}[가-힣]\d{4})\b/); // 범용
   if(carnoM) info.carno = carnoM[1];
   else if(carnoM2) info.carno = carnoM2[1];
-  else if(carnoM3 && carnoM3[1].length<=2) info.carno = '미등록('+carnoM3[1]+')';
+  else if(carnoM3) info.carno = carnoM3[1];
   else if(carnoM4) info.carno = carnoM4[1];
 
   // ── 차명
-  const carM = txt.match(/차명\s*[:：]\s*([^\nㆍ·•\r]+)/);
+  const carM  = txt.match(/차명\s*[:：]\s*([^\nㆍ·•\r]+)/);
+  const carMc = txt.match(/코드\s*:\s*\S+\s{2,}([\w\s가-힣\.\(\)\/\-]+?)\s{2,}(?:중형|소형|대형|승용|화물|승합|이륜|특수)/);
+  const carMc2= txt.match(/코드\s*:\s*\S+\s{1,}([가-힣][\w\s가-힣\.\(\)]+?)(?:\s{3,}|\s*차량가액)/);
   if(carM) info.carname = carM[1].trim().replace(/\s{2,}/g,' ');
+  else if(carMc) info.carname = carMc[1].trim();
+  else if(carMc2) info.carname = carMc2[1].trim();
 
   // ── 연식 (년식/연식 둘 다)
   const yrM = txt.match(/(\d{4})년식/);
@@ -883,8 +891,14 @@ function parseIcowon(raw) {
   else if(cpM2) info.carPrice = cpM2[1];
 
   // ── 전가입사
-  const prevM = txt.match(/전계약사\s*[:：]\s*([가-힣a-zA-Z]{2,10})/);
-  if(prevM){ const p=prevM[1].trim(); if(p.length>1) info.prev=p; }
+  const prevKW=['삼성화재','현대해상','DB손해보험','KB손해보험','한화손해보험','흥국화재','메리츠화재','하나손해보험','롯데손해보험','MG손해보험','삼성','현대','DB','KB','한화','흥국','메리츠','하나','롯데','MG'];
+  const prevRe=/(?:전보험사|전계약사)[\s]*:[\s]*([^\n\r]+)/g;
+  let _pm; while((_pm=prevRe.exec(txt))!==null){
+    const val=_pm[1].trim();
+    if(val==='()'||val===''||val==='( )')continue;
+    for(const kw of prevKW){if(val.includes(kw)){info.prev=kw;break;}}
+    if(info.prev)break;
+  }
 
   // ── 용도
   const usageM = txt.match(/용도\s*[:：]\s*([^\nㆍ·•\r]+)/);
@@ -916,7 +930,7 @@ function parseIcowon(raw) {
   info.age = (ageTableM || ageM1 || ageM2)?.[1];
 
   // ── 할인할증등급
-  const dgM = txt.match(/할인할증등급\s*[:：]?\s*(\d+[ZzPp]?)/);
+  const dgM = txt.match(/할인할증(?:등급|율)\s*[:：]?\s*(\d+[ZzPp]?F?)/);
   if(dgM) info.discGrade = dgM[1];
 
   // ── 사고이력
