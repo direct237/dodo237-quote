@@ -759,19 +759,14 @@ function doParse() {
   const dbEl = document.getElementById('debugBox');
   if(dbEl) { dbEl.textContent = ''; dbEl.style.display = 'block'; }
 
-  // 소스 자동 감지 — 수동 선택 시 건너뜀
+  // 소스 자동 감지 — 아이코원 고유 패턴 감지 시에만 전환, 아니면 현재 선택 유지 (기본 인스나라)
   if(!srcManual){
-    const isIcowon  = raw.includes('특별약관\t') || raw.includes('차량가액 :') ||
-                      raw.includes('차량번호 :') || raw.includes('전계약사 :') ||
-                      raw.includes('납입방법 :') || raw.includes('기타특약 :') ||
-                      raw.includes('부속가액 :');
-    const isInsnara = !isIcowon && (raw.includes('가입예정일(') || raw.includes('보험기간(') ||
-                      raw.includes('고객기본정보') || raw.includes('적용요율') ||
-                      raw.includes('연령특약') || raw.includes('CM보험료') || raw.includes('TM보험료'));
+    const isIcowon = raw.includes('특별약관\t') || raw.includes('부속가액 :') ||
+                     raw.includes('기타특약 :') || raw.includes('납입방법 :');
     if(isIcowon) source='icowon';
-    else if(isInsnara) source='insnara';
+    else source='insnara';
   }
-  srcManual=false; // 다음 파싱부터는 다시 자동 감지
+  srcManual=false;
   document.getElementById('src-ico').className='srcbtn'+(source==='icowon'?' on':'');
   document.getElementById('src-ins').className='srcbtn'+(source==='insnara'?' on':'');
   {const lbl=source==='icowon'?'아이코원':'인스나라';
