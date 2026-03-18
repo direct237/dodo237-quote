@@ -1839,32 +1839,27 @@ function renderTxt(){
 // ═══════════════════════════════════════════════════════════════
 function setExportMode(on){
   const el=document.getElementById('capArea');
-  // inputs → 숨기고, 값을 print-price에 동기화
-  el.querySelectorAll('.card-price-input').forEach(inp=>{
-    if(on) {
-      // input 값을 가장 가까운 print-price에 동기화
-      const container = inp.parentElement;
-      const pr = container ? container.querySelector('.card-print-price') : null;
-      if(pr) {
-        const val = inp.value.trim();
-        const color = inp.style.color || '#1a3a6b';
-        pr.style.color = color;
-        pr.textContent = val ? val + '원' : '-';
-      }
-    }
-    inp.style.display=on?'none':'';
-    // input 옆의 "원" 단위 텍스트도 숨기기
-    const unit=inp.nextElementSibling;
-    if(unit&&unit.classList.contains('cil-unit')) unit.style.display=on?'none':'';
-  });
-  // print-price 전부 표시/숨기기
-  el.querySelectorAll('.card-print-price').forEach(pr=>{
-    pr.style.display=on?'block':'none';
-  });
-  // 편집 버튼 숨기기
-  el.querySelectorAll('.card-edit-btns,.no-print').forEach(d=>{d.style.display=on?'none':'';});
-  // cbanner의 채널탭 (no-print인 것들)
-  el.querySelectorAll('.cb-chtabs').forEach(d=>{d.style.display=on?'none':'';});
+  if(on) {
+    // 1) 모든 input의 값을 span으로 교체
+    el.querySelectorAll('.card-price-input').forEach(inp=>{
+      const val = inp.value.trim();
+      const color = inp.style.color || '#1a3a6b';
+      const span = document.createElement('span');
+      span.className = '_export-price';
+      span.style.cssText = `font-size:${inp.style.fontSize||'16px'};font-weight:700;color:${color}`;
+      span.textContent = val || '-';
+      inp.style.display = 'none';
+      inp.parentElement.insertBefore(span, inp);
+    });
+    // 2) 편집 버튼, 채널탭 숨기기
+    el.querySelectorAll('.card-edit-btns,.no-print,.cb-chtabs').forEach(d=>{d.style.display='none';});
+  } else {
+    // 복원: 임시 span 제거, input 다시 표시
+    el.querySelectorAll('._export-price').forEach(s=>s.remove());
+    el.querySelectorAll('.card-price-input').forEach(inp=>{inp.style.display='';});
+    el.querySelectorAll('.card-edit-btns,.no-print').forEach(d=>{d.style.display='';});
+    el.querySelectorAll('.cb-chtabs').forEach(d=>{d.style.display='';});
+  }
 }
 function dlPNG(){
   const el=document.getElementById('capArea');
