@@ -765,16 +765,16 @@ function parseIcowon(raw) {
   const txt = raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const info = {};
 
-  // ── 고객명 (개인: 주민번호 패턴, 법인: 사업자번호 패턴)
+  // ── 고객명 (개인: 주민번호 6-7자리, 법인: 법인번호 6-4자리)
   const nameM = txt.match(/([가-힣]{2,5})\s*[\(（]\d{6}\s*-\s*[\d*]{7}[\)）]/);
   if(nameM) info.name = nameM[1];
-  // 법인: 사업자등록번호(10자리) 앞의 법인명
+  // 법인: (주)태형이투 (101817 - 2053) 형태 — 번호가 6-4자리
   if(!info.name) {
-    const corpM = txt.match(/([가-힣a-zA-Z0-9\s\(\)]{2,30}?)\s*[\(（]\d{3}\s*-\s*\d{2}\s*-\s*\d{5}[\)）]/);
+    const corpM = txt.match(/([\(（\)）가-힣a-zA-Z0-9\s]{2,30}?)\s*[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
     if(corpM) info.name = corpM[1].trim();
   }
   if(!info.name) {
-    const n2 = txt.match(/(?:피보험자|계약자|성명)\s*[:：]?\s*([가-힣a-zA-Z0-9\s\(\)]{2,30})/);
+    const n2 = txt.match(/(?:피보험자|계약자|성명)\s*[:：]?\s*([가-힣a-zA-Z0-9\s\(\)（）]{2,30})/);
     if(n2) info.name = n2[1].trim();
   }
 
@@ -944,11 +944,11 @@ function parseInsnara(raw) {
   const nameM=txt.match(/([가-힣]{2,5})\s*[\(（](\d{6}\s*-\s*[\d*]{7})[\)）]/);
   if(nameM) info.name=nameM[1];
   if(!info.name) {
-    const corpM=txt.match(/([가-힣a-zA-Z0-9\s\(\)]{2,30}?)\s*[\(（]\d{3}\s*-\s*\d{2}\s*-\s*\d{5}[\)）]/);
+    const corpM=txt.match(/([\(（\)）가-힣a-zA-Z0-9\s]{2,30}?)\s*[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
     if(corpM) info.name=corpM[1].trim();
   }
   if(!info.name) {
-    const n2=txt.match(/(?:피보험자|계약자|성명)\s*[:：]?\s*([가-힣a-zA-Z0-9\s\(\)]{2,30})/);
+    const n2=txt.match(/(?:피보험자|계약자|성명)\s*[:：]?\s*([가-힣a-zA-Z0-9\s\(\)（）]{2,30})/);
     if(n2) info.name=n2[1].trim();
   }
 
@@ -2139,8 +2139,15 @@ function loadQuote(docId) {
     // 담보 복원
     if(d.activeCov) activeCov = d.activeCov;
 
+    // 보험사 필터 복원: 저장된 rankData의 보험사 ID를 기반으로 설정
+    insFilter = new Set(Object.keys(INS));
+    const v0 = vehicles[0];
+    if(v0 && v0.rankData && v0.rankData.length) {
+      insFilter = new Set(v0.rankData.map(r => r.id));
+    }
+
     // 메모 복원
-    if(d.memo) document.getElementById('memoTxt').value = d.memo;
+    document.getElementById('memoTxt').value = d.memo || '';
 
     showPanels();
     renderAll();
