@@ -2079,6 +2079,12 @@ auth.onAuthStateChanged(user => {
     // 관리자 버튼 표시
     const adminBtn = document.getElementById('navAdminBtn');
     if(adminBtn) adminBtn.style.display = ADMIN_EMAILS.includes(user.email) ? '' : 'none';
+    // 일반 사용자: 작업자 검색 옵션 숨기기
+    const searchType = document.getElementById('searchType');
+    if(searchType) {
+      const workerOpt = searchType.querySelector('option[value="worker"]');
+      if(workerOpt) workerOpt.style.display = ADMIN_EMAILS.includes(user.email) ? '' : 'none';
+    }
     loadQuoteList();
   } else {
     overlay.style.display = 'flex';
@@ -2139,9 +2145,10 @@ function loadQuoteList() {
   const countEl = document.getElementById('quoteCount');
   listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:10px">불러오는 중...</div>';
 
-  db.collection('quotes')
-    .orderBy('createdAt', 'desc')
-    .limit(50)
+  let query = db.collection('quotes').orderBy('createdAt', 'desc');
+  // 관리자: 전체, 일반 사용자: 본인 견적만
+  if(!isAdmin()) query = query.where('userId', '==', currentUser.uid);
+  query.limit(100)
     .get()
     .then(snap => {
       if(snap.empty) {
@@ -2169,6 +2176,7 @@ function renderQuoteRows(items) {
     listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">검색 결과가 없습니다</div>';
     return;
   }
+  const admin = isAdmin();
   listEl.innerHTML = items.map(d => {
     const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const name = d.customerName || '미입력';
@@ -2177,14 +2185,15 @@ function renderQuoteRows(items) {
     const period = d.period || '';
     const user = d.userName || d.userEmail || '';
     const isOwner = d.userId === currentUser.uid;
+    const canDelete = isOwner || admin;
     return `<div class="ql-row" onclick="loadQuote('${d.id}')">
       <div class="ql-name">${name}</div>
       <div class="ql-meta">${carNo}</div>
       <div class="ql-meta">${car}</div>
       <div class="ql-meta">${period}</div>
       <div class="ql-meta">${date}</div>
-      <div class="ql-user">${user}</div>
-      ${isOwner ? `<button class="ql-del" onclick="event.stopPropagation();deleteQuote('${d.id}')" title="삭제">✕</button>` : ''}
+      ${admin ? `<div class="ql-user">${user}</div>` : ''}
+      ${canDelete ? `<button class="ql-del" onclick="event.stopPropagation();deleteQuote('${d.id}')" title="삭제">✕</button>` : ''}
     </div>`;
   }).join('');
 }
