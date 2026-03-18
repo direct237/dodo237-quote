@@ -757,7 +757,7 @@ function doParse() {
   const raw = document.getElementById('pasteArea').value.trim();
   if(!raw) { toast('⚠️ 붙여넣을 내용이 없습니다'); return; }
   const dbEl = document.getElementById('debugBox');
-  if(dbEl) { dbEl.textContent = ''; dbEl.style.display = 'block'; }
+  if(dbEl) { dbEl.textContent = ''; }
 
   // 소스는 사용자 선택 유지 (자동 감지 없음 — 기본값 인스나라)
   srcManual=false;
