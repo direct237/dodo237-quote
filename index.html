@@ -1415,7 +1415,7 @@ function setCh(c,el){
     const ct=document.getElementById('ct-'+x);if(ct)ct.className='tab'+(x===c?' on':'');
     const bc=document.getElementById('bc-'+x);if(bc)bc.className='cbcht'+(x===c?' on':'');
   });
-  document.querySelectorAll('#chTabs .tab').forEach((t,i)=>t.classList.toggle('on',['off','cm','tm'][i]===c));
+  document.querySelectorAll('#chTabs .tab').forEach((t,i)=>t.classList.toggle('on',['cm','tm','off'][i]===c));
   renderRankList();renderCard();
 }
 
