@@ -1355,11 +1355,22 @@ function renderRankList(){
     el.innerHTML='<div style="text-align:center;padding:14px;color:var(--text3);font-size:12px">견적 데이터를 붙여넣기 후 파싱하세요</div>';
     return;
   }
+  // 실제 rankData 인덱스 저장
+  data.forEach((d,i)=>d._idx=i);
   const filtered=data.filter(d=>insFilter.has(d.id));
+  // 현재 채널 기준 가격 오름차순 (0원은 뒤로)
+  const display=[...data].sort((a,b)=>{
+    const pa=gP(a),pb=gP(b);
+    if(pa===0&&pb===0)return 0;
+    if(pa===0)return 1;
+    if(pb===0)return -1;
+    return pa-pb;
+  });
   const sorted=[...filtered].sort((a,b)=>gP(a)-gP(b));
   const minP=sorted.find(d=>gP(d)>0)?gP(sorted.find(d=>gP(d)>0)):0;
 
-  el.innerHTML=data.map((d,i)=>{
+  el.innerHTML=display.map((d)=>{
+    const i=d._idx; // 실제 rankData 인덱스
     const rank=sorted.indexOf(d)+1;
     const price=gP(d);
     const diff=price>0&&minP>0?price-minP:0;
