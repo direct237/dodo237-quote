@@ -765,13 +765,19 @@ function parseIcowon(raw) {
   const txt = raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
   const info = {};
 
-  // ── 고객명 (개인: 주민번호 6-7자리, 법인: 법인번호 6-4자리)
+  // ── 고객명
+  // 개인: 오은주 (790518 - 2671213) → 주민번호 6-7자리
   const nameM = txt.match(/([가-힣]{2,5})\s*[\(（]\d{6}\s*-\s*[\d*]{7}[\)）]/);
   if(nameM) info.name = nameM[1];
-  // 법인: (주)태형이투    (101817 - 2053) 형태 — 번호가 6-4자리
+  // 법인: (주)태형이투 (101817 - 2053) → 법인번호 6-4자리
   if(!info.name) {
-    const corpM = txt.match(/(\S+)\s+[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
+    const corpM = txt.match(/(\S+)\s+[\(（]\s*\d{5,6}\s*-\s*\d{3,5}\s*[\)）]/);
     if(corpM) info.name = corpM[1].trim();
+  }
+  // 고객기본정보 다음 줄에서 이름 추출 (범용)
+  if(!info.name) {
+    const headerM = txt.match(/고객기본정보\s+([\S]+)/);
+    if(headerM) info.name = headerM[1].trim();
   }
   if(!info.name) {
     const n2 = txt.match(/(?:피보험자|계약자|성명)\s*[:：]?\s*([가-힣a-zA-Z0-9\s\(\)（）]{2,30})/);
@@ -944,8 +950,12 @@ function parseInsnara(raw) {
   const nameM=txt.match(/([가-힣]{2,5})\s*[\(（](\d{6}\s*-\s*[\d*]{7})[\)）]/);
   if(nameM) info.name=nameM[1];
   if(!info.name) {
-    const corpM=txt.match(/(\S+)\s+[\(（]\s*\d{6}\s*-\s*\d{4}\s*[\)）]/);
+    const corpM=txt.match(/(\S+)\s+[\(（]\s*\d{5,6}\s*-\s*\d{3,5}\s*[\)）]/);
     if(corpM) info.name=corpM[1].trim();
+  }
+  if(!info.name) {
+    const headerM=txt.match(/고객기본정보\s+([\S]+)/);
+    if(headerM) info.name=headerM[1].trim();
   }
   if(!info.name) {
     const n2=txt.match(/(?:피보험자|계약자|성명)\s*[:：]?\s*([가-힣a-zA-Z0-9\s\(\)（）]{2,30})/);
