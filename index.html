@@ -334,9 +334,9 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 <div class="topbar">
   <h1>🚗 도도237 비교견적 변환</h1>
   <span class="ver">v5</span>
-  <button class="srcbtn" id="src-ins" onclick="setSrc('insnara')">인스나라</button>
-  <button class="srcbtn on" id="src-ico" onclick="setSrc('icowon')">아이코원</button>
-  <span id="src-hint" style="font-size:10px;color:rgba(255,255,255,.55);font-weight:400;margin-left:6px">아이코원 견적화면 Ctrl+A → Ctrl+C</span>
+  <button class="srcbtn on" id="src-ins" onclick="setSrc('insnara')">인스나라</button>
+  <button class="srcbtn" id="src-ico" onclick="setSrc('icowon')">아이코원</button>
+  <span id="src-hint" style="font-size:10px;color:rgba(255,255,255,.55);font-weight:400;margin-left:6px">인스나라 견적화면 Ctrl+A → Ctrl+C</span>
   <div class="user-info" id="userInfo" style="display:none">
     <button class="srcbtn" id="navListBtn" onclick="showPage('list')" style="background:rgba(255,255,255,.15)">📂 견적 리스트</button>
     <button class="srcbtn on" id="navWorkBtn" onclick="showPage('work')" style="display:none">🔧 작업화면</button>
@@ -694,7 +694,7 @@ const INS = {
 // ═══════════════════════════════════════════════════════════════
 // 상태
 // ═══════════════════════════════════════════════════════════════
-let source = 'icowon';
+let source = 'insnara';
 let srcManual = false; // 수동 소스 선택 여부
 let ch = 'cm';
 let txtCh = 'cm';
