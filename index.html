@@ -1355,15 +1355,14 @@ function renderRankList(){
     el.innerHTML='<div style="text-align:center;padding:14px;color:var(--text3);font-size:12px">견적 데이터를 붙여넣기 후 파싱하세요</div>';
     return;
   }
-  const filtered=data.filter(d=>insFilter.has(d.id));
-  const sorted=[...filtered].sort((a,b)=>gP(a)-gP(b));
-  const minP=sorted.find(d=>gP(d)>0)?gP(sorted.find(d=>gP(d)>0)):0;
+  const vis=data.filter(d=>insFilter.has(d.id)&&gP(d)>0);
+  const minP=vis.length?Math.min(...vis.map(d=>gP(d))):0;
 
   el.innerHTML=data.map((d,i)=>{
-    const rank=sorted.indexOf(d)+1;
+    const rank=i+1;
     const price=gP(d);
     const diff=price>0&&minP>0?price-minP:0;
-    const rCls=['','r1','r2','r3'][rank]||'';
+    const rCls=rank<=3?['r1','r2','r3'][rank-1]:'';
     const ins=INS[d.id]||{color:'#555',logo:'?'};
     const logoHtml=ins.img
       ?`<div class="logo-wrap"><img src="${ins.img}" alt="${d.name}" onerror="this.parentElement.innerHTML='<div class=logo-txt style=background:${ins.color}>${ins.logo}</div>'"></div>`
@@ -1372,7 +1371,8 @@ function renderRankList(){
     const pSub=ch==='off'?`CM ${fmtW(d.cm||cmP(d.off,d.id))} · TM ${fmtW(d.tm||tmP(d.off,d.id))}`:
                ch==='cm'?`오프 ${fmtW(d.off)}`:
                `오프 ${fmtW(d.off)}`;
-    return `<div class="rrow${rank===1?' best':''}" draggable="true"
+    const isBest=insFilter.has(d.id)&&price>0&&price===minP;
+    return `<div class="rrow${isBest?' best':''}" draggable="true"
       ondragstart="ds(event,${i})" ondragover="dov(event)" ondrop="dd(event,${i})" ondragend="de(event)">
       <div class="rbadge ${rCls}">${rank}</div>
       ${logoHtml}
