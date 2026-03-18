@@ -398,7 +398,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 
 지원 데이터: 고객정보 / 차량정보 / 보험기간 / 담보선택 / 보험사별 총금액"></textarea>
     <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
-      <button class="btn pri" onclick="doParse()">🔍 자동 파싱</button>
+      <button class="btn pri" onclick="doParse()">🔍 견적 산출</button>
       <button class="btn" onclick="doReset()">🗑 초기화</button>
       <span id="pstatus" style="font-size:11px;color:var(--green);font-weight:600"></span>
       <button class="btn xs" id="saveNotionBtn" onclick="saveToNotion()" style="display:none;margin-left:4px">📝 노션 저장</button>
@@ -694,8 +694,8 @@ const INS = {
 // ═══════════════════════════════════════════════════════════════
 // 상태
 // ═══════════════════════════════════════════════════════════════
-let source = 'insnara';
-let srcManual = false; // 수동 소스 선택 여부
+let source = 'insnara'; // v5.1 기본값 인스나라
+let srcManual = false;
 let ch = 'cm';
 let txtCh = 'cm';
 let vehicles = [];
