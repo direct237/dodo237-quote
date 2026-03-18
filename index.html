@@ -368,6 +368,15 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
       <span id="quoteCount" style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px"></span>
       <button class="btn sm" style="margin-left:auto" onclick="loadQuoteList()">🔄 새로고침</button>
     </div>
+    <!-- 검색 영역 -->
+    <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">
+      <select id="searchType" style="padding:5px 8px;border-radius:6px;border:.5px solid var(--border);font-size:12px;font-family:inherit;background:#fff;color:var(--text)">
+        <option value="customer">고객명 / 차량번호</option>
+        <option value="worker">작업자</option>
+      </select>
+      <input class="ipt" id="searchInput" placeholder="검색어 입력..." oninput="filterQuoteList()" style="flex:1">
+      <button class="btn xs" onclick="document.getElementById('searchInput').value='';filterQuoteList()">✕ 초기화</button>
+    </div>
     <div id="quoteList">
       <div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">로그인 후 저장된 견적이 표시됩니다</div>
     </div>
@@ -2122,6 +2131,8 @@ function saveQuote() {
 }
 
 // ═══ 견적 리스트 불러오기 ═══
+let cachedQuotes = []; // 검색용 캐시
+
 function loadQuoteList() {
   if(!currentUser) return;
   const listEl = document.getElementById('quoteList');
@@ -2134,35 +2145,67 @@ function loadQuoteList() {
     .get()
     .then(snap => {
       if(snap.empty) {
+        cachedQuotes = [];
         listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">저장된 견적이 없습니다</div>';
         countEl.textContent = '(0건)';
         return;
       }
-      countEl.textContent = `(${snap.size}건)`;
-      listEl.innerHTML = snap.docs.map(doc => {
-        const d = doc.data();
-        const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-        const name = d.customerName || '미입력';
-        const car = d.carName ? d.carName.slice(0, 15) : '';
-        const carNo = d.carNo || '';
-        const period = d.period || '';
-        const user = d.userName || d.userEmail || '';
-        const isOwner = d.userId === currentUser.uid;
-        return `<div class="ql-row" onclick="loadQuote('${doc.id}')">
-          <div class="ql-name">${name}</div>
-          <div class="ql-meta">${carNo}</div>
-          <div class="ql-meta">${car}</div>
-          <div class="ql-meta">${period}</div>
-          <div class="ql-meta">${date}</div>
-          <div class="ql-user">${user}</div>
-          ${isOwner ? `<button class="ql-del" onclick="event.stopPropagation();deleteQuote('${doc.id}')" title="삭제">✕</button>` : ''}
-        </div>`;
-      }).join('');
+      cachedQuotes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      countEl.textContent = `(${cachedQuotes.length}건)`;
+      // 검색어 초기화
+      const si = document.getElementById('searchInput'); if(si) si.value = '';
+      renderQuoteRows(cachedQuotes);
     })
     .catch(e => {
       listEl.innerHTML = '<div style="text-align:center;color:var(--red);font-size:12px;padding:10px">⚠️ 불러오기 실패</div>';
       console.error(e);
     });
+}
+
+// ═══ 견적 리스트 렌더링 ═══
+function renderQuoteRows(items) {
+  const listEl = document.getElementById('quoteList');
+  if(!items.length) {
+    listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">검색 결과가 없습니다</div>';
+    return;
+  }
+  listEl.innerHTML = items.map(d => {
+    const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    const name = d.customerName || '미입력';
+    const car = d.carName ? d.carName.slice(0, 15) : '';
+    const carNo = d.carNo || '';
+    const period = d.period || '';
+    const user = d.userName || d.userEmail || '';
+    const isOwner = d.userId === currentUser.uid;
+    return `<div class="ql-row" onclick="loadQuote('${d.id}')">
+      <div class="ql-name">${name}</div>
+      <div class="ql-meta">${carNo}</div>
+      <div class="ql-meta">${car}</div>
+      <div class="ql-meta">${period}</div>
+      <div class="ql-meta">${date}</div>
+      <div class="ql-user">${user}</div>
+      ${isOwner ? `<button class="ql-del" onclick="event.stopPropagation();deleteQuote('${d.id}')" title="삭제">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ═══ 견적 검색 필터 ═══
+function filterQuoteList() {
+  const keyword = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const type = document.getElementById('searchType').value;
+  if(!keyword) { renderQuoteRows(cachedQuotes); return; }
+
+  const filtered = cachedQuotes.filter(d => {
+    if(type === 'customer') {
+      const name = (d.customerName || '').toLowerCase();
+      const carNo = (d.carNo || '').toLowerCase();
+      return name.includes(keyword) || carNo.includes(keyword);
+    } else {
+      const worker = (d.userName || d.userEmail || '').toLowerCase();
+      return worker.includes(keyword);
+    }
+  });
+  renderQuoteRows(filtered);
 }
 
 // ═══ 견적 불러오기 ═══
