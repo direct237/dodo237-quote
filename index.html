@@ -1127,15 +1127,26 @@ function parseInsnara(raw) {
   insurers.sort((a,b)=>a.off-b.off);
   dbg('인스나라 최종: '+insurers.length+'개 — '+insurers.map(d=>d.name+'('+d.off.toLocaleString()+')').join(', '));
 
-  // 담보
+  // 담보 — 테이블 헤더에서 추출 (탭/공백 허용)
   const coverages=[];
   coverages.push({key:'대인II',val:'무한'});
-  const dmM2=txt.match(/대물(\d+억)/);coverages.push({key:'대물',val:dmM2?dmM2[1]+'원':'5억원'});
-  const jsM2=txt.match(/자상(\d+억\/\d+천)/);if(jsM2)coverages.push({key:'자상',val:jsM2[1]});
-  const muM2=txt.match(/무보험(\d+억)/);if(muM2)coverages.push({key:'무보험',val:muM2[1]+'원'});
-  coverages.push({key:'자기차량',val:'가입'});
-  if(info.age)coverages.push({key:'연령한정',val:info.age});
-  if(info.drive)coverages.push({key:'운전범위',val:info.drive});
+  // 대물: 5억, 10억 등
+  const dmM2=txt.match(/대물\s+(\d+억)/);
+  coverages.push({key:'대물',val:dmM2?dmM2[1]+'원':'5억원'});
+  // 자상: 2억/5천, 3억/5천 등
+  const jsM2=txt.match(/자상\s+(\d+억\/\d+천)/);
+  if(jsM2) coverages.push({key:'자상',val:jsM2[1]});
+  // 무보험: 2억, 5억 등
+  const muM2=txt.match(/무보험\s+(\d+억)/);
+  if(muM2) coverages.push({key:'무보험',val:muM2[1]+'원'});
+  // 자차: 20%/20/50, 가입, 미가입 등
+  const jcM2=txt.match(/자차\s+([\d%\/]+|가입|미가입)/);
+  coverages.push({key:'자기차량',val:jcM2?jcM2[1]:'가입'});
+  // 긴급출동
+  const emM2=txt.match(/긴급출동\s+(가입|미가입|기본형|고급형|확장형)/);
+  if(emM2) coverages.push({key:'긴급출동',val:emM2[1]});
+  if(info.age) coverages.push({key:'연령한정',val:info.age});
+  if(info.drive) coverages.push({key:'운전범위',val:info.drive});
 
   return {info,coverages,insurers};
 }
