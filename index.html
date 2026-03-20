@@ -779,7 +779,7 @@ function doParse() {
       if(c.key==='대물') parsedCov.dm = c.val.includes('원')?c.val:c.val+'원';
       if(c.key==='자상') parsedCov.js = c.val;
       if(c.key==='무보험') parsedCov.mu = c.val.includes('원')?c.val:c.val+'원';
-      if(c.key==='자기차량') parsedCov.jc = c.val;
+      if(c.key==='자기차량') parsedCov.jc = c.val==='미가입'?'미가입':'가입';
       if(c.key==='긴급출동') { if(c.val.includes('확장')) parsedCov.em='긴급출동서비스(확장)'; else if(c.val.includes('기본')) parsedCov.em='긴급출동서비스(기본)'; }
     });
     if(Object.keys(parsedCov).length>0) activeCov={...COV_PRESETS.basic,...parsedCov};
@@ -1846,7 +1846,7 @@ function renderTxt(){
 
   // 보장내용 블록
   function covBlock(sp){
-    const jcLabel=activeCov.jc==='가입'?'가입':'제외';
+    const jcLabel=activeCov.jc==='미가입'?'제외':'가입';
     const emFull=activeCov.em||'긴급출동서비스(확장)';
     const emDisplay=emFull.startsWith('긴급출동서비스')?emFull:'긴급출동서비스('+emFull.replace('긴급출동서비스(','').replace(')','').trim()+')';
     const s=sp;
