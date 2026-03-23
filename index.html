@@ -1085,9 +1085,9 @@ function parseInsnara(raw) {
   const yrM=txt.match(/(\d{4})[A-Za-z가-힣]?년식/);
   if(yrM) info.year=yrM[1];
 
-  // 차명 (중형/소형/대형 포함, 괄호 포함, 다중공백 기준 분리)
-  const carM=txt.match(/코드\s*:\s*\S+\s{2,}([\w\s가-힣\.\(\)\/\-]+?)\s{2,}(?:중형|소형|대형|승용|화물|승합|이륜|특수)/);
-  const carM2=txt.match(/코드\s*:\s*\S+\s{1,}([가-힣][\w\s가-힣\.\(\)]+?)(?:\s{3,}|\s*차량가액)/);
+  // 차명 (중형/소형/대형 포함, 괄호 포함, 탭/다중공백 기준 분리)
+  const carM=txt.match(/코드\s*:\s*\S+(?:\t|\s{2,})([\w\s가-힣\.\(\)\/\-,]+?)(?:\t|\s{2,})(?:중형|소형|대형|승용|화물|승합|이륜|특수)/);
+  const carM2=txt.match(/코드\s*:\s*\S+(?:\t|\s{1,})([가-힣][\w\s가-힣\.\(\),]+?)(?:\t|\s{3,}|\s*차량가액)/);
   if(carM) info.carname=carM[1].trim();
   else if(carM2) info.carname=carM2[1].trim();
 
