@@ -2291,6 +2291,8 @@ function saveQuote() {
 
 // ═══ 견적 리스트 불러오기 ═══
 let cachedQuotes = []; // 검색용 캐시
+const PAGE_SIZE = 50;
+let currentPage = 1;
 
 function loadQuoteList() {
   if(!currentUser) return;
@@ -2305,7 +2307,7 @@ function loadQuoteList() {
   } else {
     query = query.where('userId', '==', currentUser.uid);
   }
-  query.limit(100)
+  query.limit(500)
     .get()
     .then(snap => {
       if(snap.empty) {
@@ -2326,6 +2328,7 @@ function loadQuoteList() {
       countEl.textContent = `(${cachedQuotes.length}건)`;
       // 검색어 초기화
       const si = document.getElementById('searchInput'); if(si) si.value = '';
+      currentPage = 1;
       renderQuoteRows(cachedQuotes);
     })
     .catch(e => {
@@ -2334,15 +2337,24 @@ function loadQuoteList() {
     });
 }
 
-// ═══ 견적 리스트 렌더링 ═══
+// ═══ 견적 리스트 렌더링 (페이지네이션) ═══
+let _currentItems = []; // 현재 표시 대상 (검색 필터 적용된 목록)
+
 function renderQuoteRows(items) {
+  _currentItems = items;
   const listEl = document.getElementById('quoteList');
   if(!items.length) {
     listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px">검색 결과가 없습니다</div>';
     return;
   }
+  const totalPages = Math.ceil(items.length / PAGE_SIZE);
+  if(currentPage > totalPages) currentPage = totalPages;
+  if(currentPage < 1) currentPage = 1;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = items.slice(start, start + PAGE_SIZE);
   const admin = isAdmin();
-  listEl.innerHTML = items.map(d => {
+
+  let html = pageItems.map(d => {
     const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const name = d.customerName || '미입력';
     const car = d.carName ? d.carName.slice(0, 15) : '';
@@ -2361,12 +2373,31 @@ function renderQuoteRows(items) {
       ${canDelete ? `<button class="ql-del" onclick="event.stopPropagation();deleteQuote('${d.id}')" title="삭제">✕</button>` : ''}
     </div>`;
   }).join('');
+
+  // 페이지네이션 바
+  if(totalPages > 1) {
+    html += `<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 0;font-size:12px">
+      <button class="btn xs" onclick="goPage(1)" ${currentPage===1?'disabled':''}>«</button>
+      <button class="btn xs" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>
+      <span style="color:var(--text2)">${currentPage} / ${totalPages} <span style="color:var(--text3);font-size:10px">(총 ${items.length}건)</span></span>
+      <button class="btn xs" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>
+      <button class="btn xs" onclick="goPage(${totalPages})" ${currentPage===totalPages?'disabled':''}>»</button>
+    </div>`;
+  }
+
+  listEl.innerHTML = html;
+}
+
+function goPage(p) {
+  currentPage = p;
+  renderQuoteRows(_currentItems);
 }
 
 // ═══ 견적 검색 필터 ═══
 function filterQuoteList() {
   const keyword = (document.getElementById('searchInput').value || '').trim().toLowerCase();
   const type = document.getElementById('searchType').value;
+  currentPage = 1;
   if(!keyword) { renderQuoteRows(cachedQuotes); return; }
 
   const filtered = cachedQuotes.filter(d => {
