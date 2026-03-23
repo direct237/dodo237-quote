@@ -869,8 +869,8 @@ function parseIcowon(raw) {
 
   // ── 차명
   const carM  = txt.match(/차명\s*[:：]\s*([^\nㆍ·•\r]+)/);
-  const carMc = txt.match(/코드\s*:\s*\S+\s{2,}([\w\s가-힣\.\(\)\/\-]+?)\s{2,}(?:중형|소형|대형|승용|화물|승합|이륜|특수)/);
-  const carMc2= txt.match(/코드\s*:\s*\S+\s{1,}([가-힣][\w\s가-힣\.\(\)]+?)(?:\s{3,}|\s*차량가액)/);
+  const carMc = txt.match(/코드\s*:\s*\S+\s{2,}([\w\s가-힣\.\(\)\/\-,]+?)\s{2,}(?:중형|소형|대형|승용|화물|승합|이륜|특수)/);
+  const carMc2= txt.match(/코드\s*:\s*\S+\s{1,}([가-힣][\w\s가-힣\.\(\),]+?)(?:\s{3,}|\s*차량가액)/);
   if(carM) info.carname = carM[1].trim().replace(/\s{2,}/g,' ');
   else if(carMc) info.carname = carMc[1].trim();
   else if(carMc2) info.carname = carMc2[1].trim();
