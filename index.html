@@ -2298,9 +2298,13 @@ function loadQuoteList() {
   const countEl = document.getElementById('quoteCount');
   listEl.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:10px">불러오는 중...</div>';
 
-  let query = db.collection('quotes').orderBy('createdAt', 'desc');
+  let query = db.collection('quotes');
   // 관리자: 전체, 일반 사용자: 본인 견적만
-  if(!isAdmin()) query = query.where('userId', '==', currentUser.uid);
+  if(isAdmin()) {
+    query = query.orderBy('createdAt', 'desc');
+  } else {
+    query = query.where('userId', '==', currentUser.uid);
+  }
   query.limit(100)
     .get()
     .then(snap => {
@@ -2311,13 +2315,21 @@ function loadQuoteList() {
         return;
       }
       cachedQuotes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // 일반 사용자: 클라이언트에서 최신순 정렬 (복합 인덱스 불필요)
+      if(!isAdmin()) {
+        cachedQuotes.sort((a, b) => {
+          const ta = a.createdAt?.seconds || 0;
+          const tb = b.createdAt?.seconds || 0;
+          return tb - ta;
+        });
+      }
       countEl.textContent = `(${cachedQuotes.length}건)`;
       // 검색어 초기화
       const si = document.getElementById('searchInput'); if(si) si.value = '';
       renderQuoteRows(cachedQuotes);
     })
     .catch(e => {
-      listEl.innerHTML = '<div style="text-align:center;color:var(--red);font-size:12px;padding:10px">⚠️ 불러오기 실패</div>';
+      listEl.innerHTML = `<div style="text-align:center;color:var(--red);font-size:12px;padding:10px">⚠️ 불러오기 실패<br><span style="font-size:10px;color:#888">${e.code || ''} ${e.message || e}</span></div>`;
       console.error(e);
     });
 }
