@@ -2270,7 +2270,8 @@ function saveQuote() {
     customerName: v.info?.name || '미입력',
     carNo: v.info?.carno || '',
     carName: v.info?.carname || '',
-    period: v.info?.period || ''
+    period: v.info?.period || '',
+    vehicleCount: vehicles.length
   };
 
   const btn = document.getElementById('saveFirebaseBtn');
@@ -2364,9 +2365,11 @@ function renderQuoteRows(items) {
     const user = d.userName || d.userEmail || '';
     const isOwner = d.userId === currentUser.uid;
     const canDelete = isOwner || admin;
+    const vc = d.vehicleCount || (d.vehicles ? d.vehicles.length : 1);
+    const dongTag = vc > 1 ? `<span style="color:var(--red);font-weight:700;font-size:10px;margin-left:4px">동증 ${vc}대</span>` : '';
     return `<div class="ql-row" onclick="loadQuote('${d.id}')">
       <div style="width:28px;text-align:center;font-size:11px;color:var(--text3);flex-shrink:0">${rowNum}</div>
-      <div class="ql-name">${name}</div>
+      <div class="ql-name">${name}${dongTag}</div>
       <div class="ql-meta">${carNo}</div>
       <div class="ql-meta">${car}</div>
       <div class="ql-meta">${period}</div>
