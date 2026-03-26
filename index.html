@@ -1598,7 +1598,7 @@ function renderCard(){
   const pn=document.getElementById('pName');if(pn)pn.textContent=(I.name||'고객')+'님';
   const pi=document.getElementById('pPrevIns');if(pi)pi.textContent=I.prev?'이전 가입사 ['+I.prev+']':'신규 [신규]';
   const pcname=document.getElementById('pCarname');if(pcname)pcname.textContent=I.carname||(I.year?I.year+'년식':'차량 정보');
-  const pcno=document.getElementById('pCarno');if(pcno)pcno.textContent=[I.carno,I.year?I.year+'년식':null,I.carPrice?'차량가액 '+I.carPrice:null].filter(Boolean).join(' · ')||'';
+  const pcno=document.getElementById('pCarno');if(pcno)pcno.innerHTML=[I.carno,I.year?I.year+'년식':null].filter(Boolean).join(' · ')+(I.carPrice?'<br>차량가액 '+I.carPrice:'')||'';
   // 보험기간 소형 표시
   const pps=document.getElementById('pPeriodSmall');
   if(pps)pps.textContent=I.period?'보험기간 '+I.period.replace('~',' – '):'';
