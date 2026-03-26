@@ -1598,7 +1598,7 @@ function renderCard(){
   const pn=document.getElementById('pName');if(pn)pn.textContent=(I.name||'고객')+'님';
   const pi=document.getElementById('pPrevIns');if(pi)pi.textContent=I.prev?'이전 가입사 ['+I.prev+']':'신규 [신규]';
   const pcname=document.getElementById('pCarname');if(pcname)pcname.textContent=I.carname||(I.year?I.year+'년식':'차량 정보');
-  const pcno=document.getElementById('pCarno');if(pcno)pcno.textContent=[I.carno,I.year?I.year+'년식':null].filter(Boolean).join(' · ')||'';
+  const pcno=document.getElementById('pCarno');if(pcno)pcno.textContent=[I.carno,I.year?I.year+'년식':null,I.carPrice?'차량가액 '+I.carPrice:null].filter(Boolean).join(' · ')||'';
   // 보험기간 소형 표시
   const pps=document.getElementById('pPeriodSmall');
   if(pps)pps.textContent=I.period?'보험기간 '+I.period.replace('~',' – '):'';
@@ -1935,6 +1935,7 @@ function renderTxt(){
     if(I.carname){
       txt+=`*차량사항   \n`;
       txt+=`${I.carname}${I.year?' ('+I.year+'년식)':''}   \n`;
+      if(I.carPrice)txt+=`차량가액 ${I.carPrice}   \n`;
     }
     const driveStr=[I.drive,I.age&&I.age.replace('만','만 ')].filter(Boolean).join('  / ');
     if(driveStr){txt+=`   \n*운전사항   \n`;txt+=`${driveStr}   \n`;}
@@ -1991,6 +1992,7 @@ function renderTxt(){
       const I=v.info||{};
       const driveStr=[I.drive,I.age&&I.age.replace('만','')].filter(Boolean).join(' / ');
       txt+=`${I.carname||'차량'}   ${driveStr}    \n`;
+      if(I.carPrice)txt+=`차량가액 ${I.carPrice}    \n`;
     });
     txt+=`${DIV2}\n`;
 
