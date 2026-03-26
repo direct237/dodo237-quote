@@ -1688,7 +1688,7 @@ function renderCard(){
         <div style="flex:1"></div>
         <div style="text-align:right">
           ${priceInput}<span class="cil-unit">원</span>
-          ${printPr}${diffHtml}
+          ${diffHtml}
         </div>
       </div>`;
     }).join('');
@@ -2029,22 +2029,22 @@ function setExportMode(on){
       const span = document.createElement('span');
       span.className = '_export-price';
       span.style.cssText = `font-size:${inp.style.fontSize||'16px'};font-weight:700;color:${color}`;
-      span.textContent = val || '-';
+      span.textContent = (val || '-') + '원';
       inp.style.display = 'none';
       inp.parentElement.insertBefore(span, inp);
     });
     // 2) 편집 버튼, 채널탭 숨기기
     el.querySelectorAll('.card-edit-btns,.no-print,.cb-chtabs').forEach(d=>{d.style.display='none';});
-    // 3) 합산 금액 인쇄용 표시
-    el.querySelectorAll('.card-print-price').forEach(d=>{d.style.display='block';});
+    // 3) 단위 "원" 숨기기 (export span에 포함됨)
+    el.querySelectorAll('.cil-unit').forEach(d=>{d.style.display='none';});
   } else {
     // 복원: 임시 span 제거, input 다시 표시
     el.querySelectorAll('._export-price').forEach(s=>s.remove());
     el.querySelectorAll('.card-price-input').forEach(inp=>{inp.style.display='';});
     el.querySelectorAll('.card-edit-btns,.no-print').forEach(d=>{d.style.display='';});
     el.querySelectorAll('.cb-chtabs').forEach(d=>{d.style.display='';});
-    // 합산 금액 인쇄용 숨기기
-    el.querySelectorAll('.card-print-price').forEach(d=>{d.style.display='none';});
+    // 단위 "원" 복원
+    el.querySelectorAll('.cil-unit').forEach(d=>{d.style.display='';});
   }
 }
 function dlPNG(){
