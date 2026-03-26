@@ -220,6 +220,14 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 .card-discount{background:#eff6ff;border-bottom:.5px solid #bfdbfe;padding:8px 16px;font-size:11px;color:#1e40af;font-weight:500}
 .card-memo-v5{padding:5px 12px;background:#fffbeb;border-top:.5px solid #fef3c7;font-size:9px;color:#78350f;line-height:1.6}
 .card-footer-v5{padding:5px 12px;background:var(--blue);color:rgba(255,255,255,.6);font-size:9px;text-align:center}
+.card-worker-v5{padding:6px 12px;background:#fef9e7;border-top:.5px solid #fde68a;font-size:11px;color:#92400e;text-align:center;font-weight:600}
+/* 내 정보 모달 */
+.profile-modal-bg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center}
+.profile-modal{background:#fff;border-radius:12px;padding:20px;width:340px;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.profile-modal h3{font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.profile-modal label{font-size:11px;color:var(--text2);display:block;margin:8px 0 3px}
+.profile-modal input{width:100%;padding:7px 10px;border:.5px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit}
+.profile-modal .brow{margin-top:14px;justify-content:flex-end}
 .cov-sel{font-size:11px;font-family:inherit;border:.5px solid var(--border);border-radius:5px;padding:2px 4px;background:#fff;color:var(--text);width:100%}
 /* export mode controlled by JS setExportMode() */
 
@@ -318,6 +326,23 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 <body>
 
 <!-- 로그인 오버레이 -->
+<!-- 내 정보 모달 -->
+<div class="profile-modal-bg" id="profileModal" onclick="if(event.target===this)closeProfileModal()">
+  <div class="profile-modal">
+    <h3>👤 내 정보 설정</h3>
+    <label>이름 (카드에 표시)</label>
+    <input id="profName" placeholder="예: 홍길동">
+    <label>직급</label>
+    <input id="profTitle" placeholder="예: 팀장">
+    <label>전화번호</label>
+    <input id="profPhone" placeholder="예: 010-0000-0000">
+    <div class="brow">
+      <button class="btn" onclick="closeProfileModal()">취소</button>
+      <button class="btn pri" onclick="saveProfile()">저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <div class="logo-txt-big">DODO237</div>
@@ -340,6 +365,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
   <div class="user-info" id="userInfo" style="display:none">
     <button class="srcbtn" id="navListBtn" onclick="showPage('list')" style="background:rgba(255,255,255,.15)">📂 견적 리스트</button>
     <button class="srcbtn on" id="navWorkBtn" onclick="showPage('work')" style="display:none">🔧 작업화면</button>
+    <button class="srcbtn" id="navProfileBtn" onclick="openProfileModal()" style="background:rgba(255,255,255,.15)">👤 내 정보</button>
     <button class="admin-btn" id="navAdminBtn" onclick="showPage('admin')" style="display:none">⚙ 관리자</button>
     <img class="user-avatar" id="userAvatar" src="" alt="">
     <span class="user-name" id="userName"></span>
@@ -605,6 +631,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
             </div>
             <!-- 메모/푸터 -->
             <div class="card-memo-v5" id="pMemo" style="display:none"></div>
+            <div class="card-worker-v5" id="pWorker" style="display:none"></div>
             <div class="card-footer-v5" id="pFooter">도도237 자동차보험 비교견적</div>
           </div>
         </div>
@@ -1665,6 +1692,11 @@ function renderCard(){
   if(memo){if(memoEl){memoEl.style.display='';memoEl.textContent=memo;}}else if(memoEl)memoEl.style.display='none';
 
   // 푸터
+  // 작업자 정보
+  const pw=document.getElementById('pWorker');
+  const wt=getWorkerText();
+  if(pw){if(wt){pw.textContent=wt;pw.style.display='';}else pw.style.display='none';}
+  // 푸터
   const pf=document.getElementById('pFooter');if(pf)pf.textContent=`도도237 자동차보험 비교견적 · ${I.startDate||new Date().toISOString().slice(0,10)}${I.prev?' · 전: '+I.prev:''}`;
 
   renderMultiCard();
@@ -1791,6 +1823,7 @@ function renderMultiCard(){
 
   // 할인특약 — 위에서 처리됨
   if(memo)html+=`<div class="card-memo-v5">${memo}</div>`;
+  const mwt=getWorkerText();if(mwt)html+=`<div class="card-worker-v5">${mwt}</div>`;
   html+=`<div class="card-footer-v5">도도237 자동차보험 비교견적 · ${new Date().toLocaleDateString('ko-KR')}</div>`;
   mc.innerHTML=html;
 }
@@ -1905,6 +1938,7 @@ function renderTxt(){
     txt+=`-------------------------------   \n`;
     txt+=`위 견적은 참고 자료이며 보험사 인수규정에 따라 인수금지나 보험료가 변동될 수 있습니다.   \n`;
     if(memo)txt+=`\n📌 ${memo}\n`;
+    const wt1=getWorkerText();if(wt1)txt+=`\n${wt1}\n`;
 
   // ─────────── 동일증권 ───────────
   } else {
@@ -1966,6 +2000,7 @@ function renderTxt(){
     txt+=`-------------------------------      \n`;
     txt+=`위 견적은 참고 자료이며 보험사 인수규정에 따라 인수금지나 보험료가 변동될 수 있습니다.\n`;
     if(memo)txt+=`\n📌 ${memo}\n`;
+    const wt2=getWorkerText();if(wt2)txt+=`\n${wt2}\n`;
   }
   document.getElementById('txtPre').textContent=txt;
 }
@@ -2176,6 +2211,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 let currentUser = null;
+let userProfile = { name:'', title:'', phone:'' }; // 작업자 프로필
 
 // 페이지 전환
 function showPage(page) {
@@ -2229,6 +2265,7 @@ auth.onAuthStateChanged(user => {
     document.getElementById('userAvatar').src = user.photoURL || '';
     document.getElementById('userName').textContent = user.displayName || user.email;
     saveUserInfo(user);
+    loadProfile();
     // 관리자 버튼 표시
     const adminBtn = document.getElementById('navAdminBtn');
     if(adminBtn) adminBtn.style.display = ADMIN_EMAILS.includes(user.email) ? '' : 'none';
@@ -2516,6 +2553,50 @@ function saveUserInfo(user) {
     photoURL: user.photoURL || '',
     lastLogin: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true });
+}
+
+// ═══ 프로필 관리 ═══
+function openProfileModal() {
+  document.getElementById('profName').value = userProfile.name || '';
+  document.getElementById('profTitle').value = userProfile.title || '';
+  document.getElementById('profPhone').value = userProfile.phone || '';
+  document.getElementById('profileModal').style.display = 'flex';
+}
+function closeProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+function saveProfile() {
+  if(!currentUser) return;
+  userProfile.name = document.getElementById('profName').value.trim();
+  userProfile.title = document.getElementById('profTitle').value.trim();
+  userProfile.phone = document.getElementById('profPhone').value.trim();
+  db.collection('users').doc(currentUser.uid).set({
+    profileName: userProfile.name,
+    profileTitle: userProfile.title,
+    profilePhone: userProfile.phone
+  }, { merge: true }).then(() => {
+    toast('내 정보 저장 완료');
+    closeProfileModal();
+    renderCard(); renderTxt();
+  });
+}
+function loadProfile() {
+  if(!currentUser) return;
+  db.collection('users').doc(currentUser.uid).get().then(doc => {
+    if(doc.exists) {
+      const d = doc.data();
+      userProfile.name = d.profileName || '';
+      userProfile.title = d.profileTitle || '';
+      userProfile.phone = d.profilePhone || '';
+      renderCard(); renderTxt();
+    }
+  });
+}
+// 작업자 표시 텍스트 생성
+function getWorkerText() {
+  if(!userProfile.name) return '';
+  let t = '다이렉트237 ' + userProfile.name;
+  if(userProfile.title) t += ' ' + userProfile.title;
+  if(userProfile.phone) t += ' (' + userProfile.phone + ')';
+  return t;
 }
 
 // 사용자 목록 불러오기
