@@ -1050,7 +1050,7 @@ function parseIcowon(raw) {
     coverages.push({key:'대물', val: dmAlt ? dmAlt[1]+'원' : '5억원'});
   } else coverages.push({key:'대물', val: dm2M[1]});
   // 자상
-  const jsM2 = txt.match(/(자\d+억\/[\d]+(?:천|억))/);
+  const jsM2 = txt.match(/(자상?\d+억\/[\d]+(?:천|억))/);
   if(jsM2) coverages.push({key:'자상', val: jsM2[1]});
   // 무보험
   const muM2 = txt.match(/무보험[^\n]{0,60}?(2억원|5억원)/);
@@ -1238,7 +1238,7 @@ function parseInsnara(raw) {
   const dmM2=txt.match(/대물\s+(\d+억)/);
   coverages.push({key:'대물',val:dmM2?dmM2[1]+'원':'5억원'});
   // 자상: 2억/5천, 3억/5천 등
-  const jsM2=txt.match(/자상\s+(\d+억\/\d+천)/);
+  const jsM2=txt.match(/자상\s+(\d+억\/\d+(?:천|억))/);
   if(jsM2) coverages.push({key:'자상',val:jsM2[1]});
   // 무보험: 2억, 5억 등
   const muM2=txt.match(/무보험\s+(\d+억)/);
@@ -1605,7 +1605,7 @@ function renderCard(){
 
   // 특약/보장 그리드 — 아이콘 포함
   const driveText=[(I.drive||''),(I.age||'')].filter(Boolean).join('\n')||'-';
-  const jsShort=(activeCov.js||'3억/5천').replace(/^자/,'');
+  const jsShort=(activeCov.js||'3억/5천').replace(/^자상?/,'');
   const emShort=(activeCov.em||'확장').replace('긴급출동서비스(','').replace(')','').replace('형','');
 
   // 아이콘 SVG 맵
@@ -1776,7 +1776,7 @@ function renderMultiCard(){
       <div class="cov-icon-cell"><div class="ci-lbl">대물</div><div class="ci-val">${activeCov.dm||'5억원'}</div></div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
-      <div class="cov-icon-cell"><div class="ci-lbl">자상</div><div class="ci-val">${(activeCov.js||'2억/5천').replace(/^자/,'')}</div></div>
+      <div class="cov-icon-cell"><div class="ci-lbl">자상</div><div class="ci-val">${(activeCov.js||'2억/5천').replace(/^자상?/,'')}</div></div>
       <div class="cov-icon-cell"><div class="ci-lbl">무보험</div><div class="ci-val">${activeCov.mu||'5억원'}</div></div>
       <div class="cov-icon-cell"><div class="ci-lbl">자기차량</div><div class="ci-val">${activeCov.jc||'가입'}</div></div>
       <div class="cov-icon-cell"><div class="ci-lbl">긴급출동</div><div class="ci-val">예(${(activeCov.em||'확장').replace('긴급출동서비스(','').replace(')','').replace('형','')})</div></div>
@@ -1876,7 +1876,7 @@ function renderTxt(){
   // 자상 표기 형식: "자3억/5천" → "자동차상해:3억원 /5천만"
   function fmtJs(js){
     if(!js) return '자동차상해:3억원 /5천만';
-    const clean=js.replace(/^자/,'');
+    const clean=js.replace(/^자상?/,'');
     const p=clean.split('/');
     if(p.length===2){
       const a=p[0].trim().includes('억')?p[0].trim()+'원':p[0].trim();
