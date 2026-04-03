@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>도도237 비교견적 변환 v5</title>
+<script>
+// ===== 브랜드 설정 (새 도메인 생성 시 이 객체만 수정) =====
+const BRAND = {
+  name: '도도237',              // 한글 브랜드명
+  nameEn: 'DODO237',            // 영문 브랜드명 (이미지 카드 상단)
+  contact: '다이렉트237',       // 담당자 연락처 앞 표기명
+  title: '도도237 비교견적 변환', // 상단 헤더 타이틀
+  footer: '도도237 자동차보험 비교견적' // 이미지 카드 하단 푸터
+};
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -345,8 +355,8 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
-    <div class="logo-txt-big">DODO237</div>
-    <h2>도도237 비교견적</h2>
+    <div class="logo-txt-big" id="loginLogo">DODO237</div>
+    <h2 id="loginTitle">도도237 비교견적</h2>
     <p>다이렉트 자동차보험 비교견적 시스템</p>
     <button class="google-btn" onclick="googleLogin()">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
@@ -357,7 +367,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <h1>🚗 도도237 비교견적 변환</h1>
+  <h1 id="topTitle">🚗 도도237 비교견적 변환</h1>
   <span class="ver">v5</span>
   <button class="srcbtn on" id="src-ins" onclick="setSrc('insnara')">인스나라</button>
   <button class="srcbtn" id="src-ico" onclick="setSrc('icowon')">아이코원</button>
@@ -563,7 +573,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
             <!-- 배너 -->
             <div class="cbanner">
               <div class="cb-top">
-                <span class="cb-logo">DODO237</span>
+                <span class="cb-logo" id="cardLogo">DODO237</span>
                 <span class="cb-badge-ch" id="pChBadge">CM 다이렉트</span>
               </div>
               <div class="cb-main-title">다이렉트자동차보험 비교견적</div>
@@ -632,7 +642,7 @@ textarea:focus,.ipt:focus{border-color:var(--blue2)}
             <!-- 메모/푸터 -->
             <div class="card-memo-v5" id="pMemo" style="display:none"></div>
             <div class="card-worker-v5" id="pWorker" style="display:none"></div>
-            <div class="card-footer-v5" id="pFooter">도도237 자동차보험 비교견적</div>
+            <div class="card-footer-v5" id="pFooter"></div>
           </div>
         </div>
       </div>
@@ -1706,7 +1716,7 @@ function renderCard(){
   const wt=getWorkerText();
   if(pw){if(wt){pw.textContent=wt;pw.style.display='';}else pw.style.display='none';}
   // 푸터
-  const pf=document.getElementById('pFooter');if(pf)pf.textContent=`도도237 자동차보험 비교견적 · ${I.startDate||new Date().toISOString().slice(0,10)}${I.prev?' · 전: '+I.prev:''}`;
+  const pf=document.getElementById('pFooter');if(pf)pf.textContent=`${BRAND.footer} · ${I.startDate||new Date().toISOString().slice(0,10)}${I.prev?' · 전: '+I.prev:''}`;
 
   renderMultiCard();
 }
@@ -1744,7 +1754,7 @@ function renderMultiCard(){
   const minTotal=sortedIds.length?totals[sortedIds[0]]:0;
 
   let html=`<div class="cbanner">
-    <div class="cb-top"><span class="cb-logo">DODO237</span><span class="cb-badge-ch">동일증권 ${vehicles.length}대</span></div>
+    <div class="cb-top"><span class="cb-logo">${BRAND.nameEn}</span><span class="cb-badge-ch">동일증권 ${vehicles.length}대</span></div>
     <div class="cb-main-title">다이렉트자동차보험 비교견적</div>
               <div class="cb-sub-title">최적의 특약과 보장을 찾다!</div>
     <div class="cb-period">${I0.period?I0.period.replace(/-/g,'.').replace('~',' – '):''}</div>
@@ -1833,7 +1843,7 @@ function renderMultiCard(){
   // 할인특약 — 위에서 처리됨
   if(memo)html+=`<div class="card-memo-v5">${memo}</div>`;
   const mwt=getWorkerText();if(mwt)html+=`<div class="card-worker-v5">${mwt}</div>`;
-  html+=`<div class="card-footer-v5">도도237 자동차보험 비교견적 · ${new Date().toLocaleDateString('ko-KR')}</div>`;
+  html+=`<div class="card-footer-v5">${BRAND.footer} · ${new Date().toLocaleDateString('ko-KR')}</div>`;
   mc.innerHTML=html;
 }
 
@@ -2265,6 +2275,14 @@ function googleLogout() {
   auth.signOut();
 }
 
+// 브랜드 설정 적용
+document.title = BRAND.title + ' v5';
+document.getElementById('loginLogo').textContent = BRAND.nameEn;
+document.getElementById('loginTitle').textContent = BRAND.name + ' 비교견적';
+document.getElementById('topTitle').textContent = '🚗 ' + BRAND.title;
+document.getElementById('cardLogo').textContent = BRAND.nameEn;
+document.getElementById('pFooter').textContent = BRAND.footer;
+
 // 인증 상태 감지
 auth.onAuthStateChanged(user => {
   currentUser = user;
@@ -2604,7 +2622,7 @@ function loadProfile() {
 // 작업자 표시 텍스트 생성
 function getWorkerText() {
   if(!userProfile.name) return '';
-  let t = '다이렉트237 ' + userProfile.name;
+  let t = BRAND.contact + ' ' + userProfile.name;
   if(userProfile.title) t += ' ' + userProfile.title;
   if(userProfile.phone) t += ' (' + userProfile.phone + ')';
   return t;
