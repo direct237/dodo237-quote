@@ -2074,7 +2074,7 @@ function setExportMode(on){
     // 3) 단위 "원" 숨기기 (export span에 포함됨)
     el.querySelectorAll('.cil-unit').forEach(d=>{d.style.display='none';});
     // 4) 이미지용 합산금액 표시
-    el.querySelectorAll('.card-print-price').forEach(d=>{d.style.display='';});
+    el.querySelectorAll('.card-print-price').forEach(d=>{d.style.display='block';});
   } else {
     // 복원: 임시 span 제거, input 다시 표시
     el.querySelectorAll('._export-price').forEach(s=>s.remove());
